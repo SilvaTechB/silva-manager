@@ -1,0 +1,34 @@
+# Build outputs
+/build/
+app/build/
+*/build/
+
+# Gradle caches and wrappers (not the wrapper scripts themselves)
+.gradle/
+.gradle-home/
+**/.gradle/
+
+# Temp files
+.tmp/
+**/.tmp/
+
+# CMake / NDK build caches
+app/.cxx/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+local.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kotlin incremental compilation
+**/*.kotlin_module
+
+# APK outputs (released via GitHub Releases, not committed)
+*.apk
+*.aab

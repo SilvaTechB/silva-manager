@@ -610,35 +610,73 @@ private fun BundleUpdateSnackbarContent(
 }
 
 /**
- * Section 2: Greeting message.
+ * Section 2: Greeting message — Silva Tech Nexus branded.
  */
 @Composable
 fun GreetingSection(
     message: String
 ) {
+    val primary = MaterialTheme.colorScheme.primary
+    val infiniteTransition = rememberInfiniteTransition(label = "nexus_pill_glow")
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.55f,
+        targetValue  = 1.00f,
+        animationSpec = infiniteRepeatable(
+            animation  = tween(1400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glow_alpha"
+    )
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        // Brand label with accent pill background
-        Surface(
-            shape = RoundedCornerShape(50),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-            tonalElevation = 0.dp
+        // ── Nexus brand pill ────────────────────────────────────────────────
+        val pillShape = RoundedCornerShape(50)
+        Box(
+            modifier = Modifier
+                .clip(pillShape)
+                .drawWithContent {
+                    val cr = CornerRadius(size.height / 2)
+                    // neon glow fill
+                    drawRoundRect(
+                        color = primary.copy(alpha = 0.14f),
+                        cornerRadius = cr
+                    )
+                    drawContent()
+                    // animated neon border
+                    drawRoundRect(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                primary.copy(alpha = glowAlpha),
+                                primary.copy(alpha = glowAlpha * 0.45f),
+                                primary.copy(alpha = glowAlpha)
+                            ),
+                            start = Offset(0f, 0f),
+                            end   = Offset(size.width, size.height)
+                        ),
+                        cornerRadius = cr,
+                        style = Stroke(width = 1.5.dp.toPx())
+                    )
+                }
         ) {
             Text(
                 text = stringResource(R.string.app_landing_title),
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 2.sp,
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)
+                color = primary,
+                letterSpacing = 3.sp,
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
             )
         }
-        Spacer(modifier = Modifier.height(12.dp))
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // ── Animated greeting heading ───────────────────────────────────────
         Box(contentAlignment = Alignment.Center) {
             AnimatedContent(
                 targetState = message,
@@ -656,9 +694,9 @@ fun GreetingSection(
                     text = targetMessage,
                     style = MaterialTheme.typography.headlineMedium.copy(
                         shadow = androidx.compose.ui.graphics.Shadow(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
-                            offset = Offset(0f, 4f),
-                            blurRadius = 12f
+                            color = primary.copy(alpha = 0.45f),
+                            offset = Offset(0f, 3f),
+                            blurRadius = 18f
                         )
                     ),
                     fontWeight = FontWeight.Bold,
@@ -1413,19 +1451,19 @@ fun OtherAppsSection(
 
                 drawContent()
 
-                // Gradient border: primary tint on left, outline on right
+                // Neon cyan border with glow
                 drawRoundRect(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            primaryColor.copy(alpha = if (isDark) 0.50f else 0.45f),
-                            outlineColor.copy(alpha = if (isDark) 0.35f else 0.45f),
-                            primaryColor.copy(alpha = if (isDark) 0.25f else 0.20f)
+                            primaryColor.copy(alpha = if (isDark) 0.85f else 0.65f),
+                            primaryColor.copy(alpha = if (isDark) 0.40f else 0.35f),
+                            primaryColor.copy(alpha = if (isDark) 0.70f else 0.50f)
                         ),
                         start = Offset(0f, 0f),
                         end = Offset(w, h)
                     ),
                     cornerRadius = cr,
-                    style = Stroke(width = 1.dp.toPx())
+                    style = Stroke(width = 1.5.dp.toPx())
                 )
             }
             .clickable(
@@ -1598,20 +1636,35 @@ private fun AppCardLayout(
 
                 drawContent()
 
-                // Border: bright top-left → faded bottom-right with stronger presence
+                // Border: neon cyan top-left → card accent → muted bottom-right
                 drawRoundRect(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.75f * borderAlpha),
-                            midColor.copy(alpha = 0.40f * borderAlpha),
-                            endColor.copy(alpha = 0.20f * borderAlpha),
-                            Color.White.copy(alpha = 0.30f * borderAlpha)
+                            Color(0xFF00D9FF).copy(alpha = 0.80f * borderAlpha),
+                            Color.White.copy(alpha = 0.35f * borderAlpha),
+                            midColor.copy(alpha = 0.30f * borderAlpha),
+                            Color(0xFF00D9FF).copy(alpha = 0.45f * borderAlpha)
                         ),
                         start = Offset(0f, 0f),
                         end   = Offset(w, h)
                     ),
                     cornerRadius = cr,
                     style = Stroke(width = 1.5.dp.toPx())
+                )
+
+                // Neon top-edge shine (thin horizontal glow line at top)
+                drawRoundRect(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color(0xFF00D9FF).copy(alpha = 0.30f * borderAlpha),
+                            Color.Transparent
+                        ),
+                        start = Offset(w * 0.2f, 0f),
+                        end   = Offset(w * 0.8f, 0f)
+                    ),
+                    cornerRadius = cr,
+                    style = Stroke(width = 1.dp.toPx())
                 )
             }
             .combinedClickable(

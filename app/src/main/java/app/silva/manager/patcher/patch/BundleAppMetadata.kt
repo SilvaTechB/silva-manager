@@ -8,7 +8,7 @@ package app.silva.manager.patcher.patch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import app.silva.manager.util.KnownApps
-import app.morphe.patcher.patch.ApkFileType
+import app.silva.patcher.patch.ApkFileType
 
 /**
  * Aggregated metadata about an app as declared in one or more enabled patch bundles.

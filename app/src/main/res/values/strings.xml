@@ -1,6 +1,6 @@
 <resources>
     <!-- App landing title -->
-    <string name="app_landing_title" translatable="false">SILVA TECH PATCHING</string>
+    <string name="app_landing_title" translatable="false">SILVA TECH NEXUS</string>
 
     <!-- Home Screen -->
     <string name="home_other_apps">Other apps</string>

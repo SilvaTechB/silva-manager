@@ -136,13 +136,14 @@ fun BottomActionButton(
             },
         shape = shape,
         color = finalContainerColor.copy(alpha = if (enabled) 1f else 0.5f),
-        shadowElevation = if (enabled) 4.dp else 0.dp,
+        shadowElevation = if (enabled) 6.dp else 0.dp,
         border = BorderStroke(
-            width = 1.dp,
+            width = 1.5.dp,
             brush = Brush.linearGradient(
                 colors = listOf(
-                    finalContentColor.copy(alpha = if (enabled) 0.2f else 0.1f),
-                    finalContentColor.copy(alpha = if (enabled) 0.1f else 0.05f)
+                    finalContentColor.copy(alpha = if (enabled) 0.55f else 0.15f),
+                    finalContentColor.copy(alpha = if (enabled) 0.20f else 0.08f),
+                    finalContentColor.copy(alpha = if (enabled) 0.45f else 0.12f)
                 )
             )
         ),

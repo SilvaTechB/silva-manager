@@ -36,8 +36,7 @@ dependencyResolutionManagement {
             }
         }
         maven {
-            // A repository must be specified for some reason. "registry" is a dummy.
-            url = uri("https://maven.pkg.github.com/MorpheApp/registry")
+            url = uri("https://maven.pkg.github.com/SilvaTechB/silva-patcher")
             credentials {
                 val hardcodedUser = ""
                 val hardcodedToken = ""
@@ -54,10 +53,10 @@ dependencyResolutionManagement {
 rootProject.name = "silva-manager"
 include(":app")
 
-// Include morphe-patcher and morphe-library as composite builds if they exist locally
+// Include silva-patcher and silva-library as composite builds if they exist locally
 mapOf(
-    "morphe-patcher" to "app.morphe:morphe-patcher",
-    "morphe-library" to "app.morphe:morphe-library",
+    "silva-patcher" to "app.silva:silva-patcher",
+    "silva-library" to "app.silva:silva-library",
     "ARSCLib" to "com.github.REAndroid:arsclib"
 ).forEach { (libraryPath, libraryName) ->
     val libDir = file("../$libraryPath")

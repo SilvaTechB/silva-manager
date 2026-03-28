@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-03-28T18:42:00.000Z",
-  "description": "## app [1.12.4](https://github.com/SilvaTechB/silva-manager/compare/v1.12.3...v1.12.4) (2026-03-28)\n\n\n### Bug Fixes\n\n* Fix \"Sources are loading\" error — patch bundle validation now accepts JVM class file format used by silva-patches v1.21.1\n* YouTube, YouTube Music and all other app patches now load correctly",
-  "download_url": "https://github.com/SilvaTechB/silva-manager/releases/download/v1.12.4/silva-manager-1.12.4.apk",
+  "created_at": "2026-03-28T22:00:00.000Z",
+  "description": "## app [1.12.5](https://github.com/SilvaTechB/silva-manager/compare/v1.12.4...v1.12.5) (2026-03-28)\n\n\n### Bug Fixes\n\n* Fix changelog URL derivation referencing wrong repository (SilvaApp/morphe-patches → SilvaTechB/silva-patches)\n\n### Improvements\n\n* Home screen brand label now displayed in a polished pill badge\n* App cards updated with deeper frosted glass gradients and stronger border contrast\n* \"Other apps\" button redesigned with glassmorphism gradient border and Apps icon\n* Bottom action bar buttons now display text labels alongside icons for improved clarity",
+  "download_url": "https://github.com/SilvaTechB/silva-manager/releases/download/v1.12.5/silva-manager-1.12.5.apk",
   "signature_download_url": "",
-  "version": "1.12.4"
+  "version": "1.12.5"
 }

@@ -331,8 +331,8 @@ class SilvaAPI(
      * Returns null if the endpoint is not a recognizable GitHub URL.
      *
      * Examples:
-     *   https://raw.githubusercontent.com/SilvaApp/morphe-patches/main/patches-bundle.json
-     *   → https://raw.githubusercontent.com/SilvaApp/morphe-patches/main/CHANGELOG.md
+     *   https://raw.githubusercontent.com/SilvaTechB/silva-patches/main/patches-bundle.json
+     *   → https://raw.githubusercontent.com/SilvaTechB/silva-patches/main/CHANGELOG.md
      */
     fun changelogUrlFromBundleEndpoint(endpoint: String): String? {
         return try {

@@ -73,6 +73,15 @@ Output APK: `app/build/outputs/apk/debug/silva-manager-{version}.apk`
 
 **Note**: First build takes ~5 minutes to download dependencies. Subsequent builds use Gradle cache and take ~1 minute.
 
+## Current Version: 1.12.5
+
+### Recent Changes (v1.12.5)
+- **Bug fix**: Corrected wrong repository reference (`SilvaApp/morphe-patches` → `SilvaTechB/silva-patches`) in the changelog URL derivation documentation in `SilvaAPI.kt`
+- **UI**: Brand label in home screen greeting now uses a styled pill badge with accent background
+- **UI**: App cards have deeper frosted glass gradients, stronger border contrast, taller card height (84dp)
+- **UI**: "Other apps" button redesigned with glassmorphism gradient border and `Apps` icon
+- **UI**: Bottom action bar buttons now show text labels below icons for better clarity
+
 ## Dependencies
 
 Key dependencies:

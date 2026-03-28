@@ -618,18 +618,27 @@ fun GreetingSection(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
     ) {
-        Text(
-            text = stringResource(R.string.app_landing_title),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.primary,
-            letterSpacing = 1.5.sp,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+        // Brand label with accent pill background
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+            tonalElevation = 0.dp
+        ) {
+            Text(
+                text = stringResource(R.string.app_landing_title),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = 2.sp,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
         Box(contentAlignment = Alignment.Center) {
             AnimatedContent(
                 targetState = message,
@@ -645,7 +654,13 @@ fun GreetingSection(
             ) { targetMessage ->
                 Text(
                     text = targetMessage,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        shadow = androidx.compose.ui.graphics.Shadow(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+                            offset = Offset(0f, 4f),
+                            blurRadius = 12f
+                        )
+                    ),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -1341,9 +1356,6 @@ fun OtherAppsSection(
     val shape = RoundedCornerShape(20.dp)
     val isDark = isSystemInDarkTheme()
 
-    val backgroundAlpha = if (isDark) 0.35f else 0.6f
-    val borderAlpha = if (isDark) 0.4f else 0.6f
-
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -1355,23 +1367,67 @@ fun OtherAppsSection(
         label = "other_apps_press_scale"
     )
 
+    val surfaceColor = MaterialTheme.colorScheme.surfaceVariant
+    val outlineColor = MaterialTheme.colorScheme.outline
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 12.dp)
-            .height(48.dp)
+            .height(52.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(shape)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = backgroundAlpha)
-            )
-            .border(
-                BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = borderAlpha)
-                ),
-                shape = shape
-            )
+            .drawWithContent {
+                val w = size.width
+                val h = size.height
+                val cr = CornerRadius(20.dp.toPx())
+
+                // Glassmorphism background
+                drawRoundRect(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            surfaceColor.copy(alpha = if (isDark) 0.50f else 0.70f),
+                            primaryColor.copy(alpha = if (isDark) 0.08f else 0.06f),
+                            surfaceColor.copy(alpha = if (isDark) 0.38f else 0.55f),
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(w, h)
+                    ),
+                    cornerRadius = cr
+                )
+
+                // Subtle inner top shine
+                drawRoundRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = if (isDark) 0.06f else 0.10f),
+                            Color.Transparent
+                        ),
+                        startY = 0f,
+                        endY = h * 0.5f
+                    ),
+                    cornerRadius = cr
+                )
+
+                drawContent()
+
+                // Gradient border: primary tint on left, outline on right
+                drawRoundRect(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            primaryColor.copy(alpha = if (isDark) 0.50f else 0.45f),
+                            outlineColor.copy(alpha = if (isDark) 0.35f else 0.45f),
+                            primaryColor.copy(alpha = if (isDark) 0.25f else 0.20f)
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(w, h)
+                    ),
+                    cornerRadius = cr,
+                    style = Stroke(width = 1.dp.toPx())
+                )
+            }
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
@@ -1381,13 +1437,23 @@ fun OtherAppsSection(
             },
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = stringResource(R.string.home_other_apps),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Apps,
+                contentDescription = null,
+                tint = textColor.copy(alpha = 0.80f),
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = stringResource(R.string.home_other_apps),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = textColor
+            )
+        }
     }
 }
 
@@ -1440,7 +1506,7 @@ private fun AppCardLayout(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(84.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(shape)
             .drawWithContent {
@@ -1452,9 +1518,9 @@ private fun AppCardLayout(
                 drawRoundRect(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            baseColor.copy(alpha = 0.80f * glassAlpha),
-                            midColor.copy(alpha = 0.60f * glassAlpha),
-                            endColor.copy(alpha = 0.40f * glassAlpha)
+                            baseColor.copy(alpha = 0.88f * glassAlpha),
+                            midColor.copy(alpha = 0.65f * glassAlpha),
+                            endColor.copy(alpha = 0.45f * glassAlpha)
                         ),
                         center = Offset(w * 0.15f, h * 0.85f),
                         radius = w * 1.1f
@@ -1466,8 +1532,8 @@ private fun AppCardLayout(
                 drawRoundRect(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            endColor.copy(alpha = 0.55f * glassAlpha),
-                            midColor.copy(alpha = 0.25f * glassAlpha),
+                            endColor.copy(alpha = 0.62f * glassAlpha),
+                            midColor.copy(alpha = 0.30f * glassAlpha),
                             Color.Transparent
                         ),
                         center = Offset(w * 0.88f, h * 0.12f),
@@ -1476,13 +1542,13 @@ private fun AppCardLayout(
                     cornerRadius = cr
                 )
 
-                // Layer 3: frosted white overlay - very subtle, just adds glass texture
+                // Layer 3: frosted white overlay - adds glass depth
                 drawRoundRect(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.03f * glassAlpha),
-                            Color.White.copy(alpha = 0.01f * glassAlpha),
-                            Color.White.copy(alpha = 0.02f * glassAlpha)
+                            Color.White.copy(alpha = 0.07f * glassAlpha),
+                            Color.White.copy(alpha = 0.02f * glassAlpha),
+                            Color.White.copy(alpha = 0.04f * glassAlpha)
                         ),
                         startY = 0f,
                         endY = h
@@ -1490,16 +1556,16 @@ private fun AppCardLayout(
                     cornerRadius = cr
                 )
 
-                // Layer 4: diagonal sweep highlight (top-left → mid) - thin specular only
+                // Layer 4: diagonal sweep highlight (top-left → mid) - specular glint
                 drawRoundRect(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.08f * glassAlpha),
-                            Color.White.copy(alpha = 0.02f * glassAlpha),
+                            Color.White.copy(alpha = 0.14f * glassAlpha),
+                            Color.White.copy(alpha = 0.04f * glassAlpha),
                             Color.Transparent
                         ),
                         start = Offset(0f, 0f),
-                        end   = Offset(w * 0.5f, h)
+                        end   = Offset(w * 0.55f, h)
                     ),
                     cornerRadius = cr
                 )
@@ -1509,7 +1575,7 @@ private fun AppCardLayout(
                     brush = Brush.radialGradient(
                         colors = listOf(
                             Color.Transparent,
-                            endColor.copy(alpha = 0.22f * glassAlpha)
+                            endColor.copy(alpha = 0.28f * glassAlpha)
                         ),
                         center = Offset(w * 0.5f, h),
                         radius = w * 0.65f
@@ -1517,16 +1583,29 @@ private fun AppCardLayout(
                     cornerRadius = cr
                 )
 
+                // Layer 6: subtle dark vignette at corners for depth
+                drawRoundRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.10f * glassAlpha)
+                        ),
+                        center = Offset(w * 0.5f, h * 0.5f),
+                        radius = w * 0.9f
+                    ),
+                    cornerRadius = cr
+                )
+
                 drawContent()
 
-                // Border: bright top-left → faded bottom-right
+                // Border: bright top-left → faded bottom-right with stronger presence
                 drawRoundRect(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.65f * borderAlpha),
-                            midColor.copy(alpha = 0.30f * borderAlpha),
-                            endColor.copy(alpha = 0.15f * borderAlpha),
-                            Color.White.copy(alpha = 0.20f * borderAlpha)
+                            Color.White.copy(alpha = 0.75f * borderAlpha),
+                            midColor.copy(alpha = 0.40f * borderAlpha),
+                            endColor.copy(alpha = 0.20f * borderAlpha),
+                            Color.White.copy(alpha = 0.30f * borderAlpha)
                         ),
                         start = Offset(0f, 0f),
                         end   = Offset(w, h)

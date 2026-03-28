@@ -13,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.silva.manager.R
 
@@ -124,7 +126,7 @@ fun BottomActionButton(
         },
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(60.dp)
             .semantics {
                 role = Role.Button
                 this.contentDescription = contentDesc
@@ -146,12 +148,12 @@ fun BottomActionButton(
         ),
         enabled = enabled
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             if (showProgress) {
                 CircularProgressIndicator(
@@ -164,7 +166,17 @@ fun BottomActionButton(
                     imageVector = icon,
                     contentDescription = null,
                     tint = finalContentColor.copy(alpha = if (enabled) 1f else 0.5f),
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            if (!text.isNullOrBlank() && !showProgress) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = finalContentColor.copy(alpha = if (enabled) 0.85f else 0.4f),
+                    maxLines = 1
                 )
             }
         }

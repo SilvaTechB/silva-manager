@@ -1,42 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Silva Manager icon - stylized S lettermark -->
+<!-- Silva Manager icon - modern stylized S lettermark with accent ring -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="512"
-    android:viewportHeight="512">
+    android:viewportWidth="108"
+    android:viewportHeight="108">
 
-    <!-- Bold stylized S lettermark -->
+    <!-- Outer subtle ring accent -->
+    <path
+        android:pathData="M54,12 A42,42 0 1,1 53.99,12 Z"
+        android:strokeWidth="2.5"
+        android:fillColor="#00000000"
+        android:strokeColor="#3AFFFFFF" />
+
+    <!-- Inner ring accent -->
+    <path
+        android:pathData="M54,18 A36,36 0 1,1 53.99,18 Z"
+        android:strokeWidth="1.2"
+        android:fillColor="#00000000"
+        android:strokeColor="#1AFFFFFF" />
+
+    <!-- Modern geometric S lettermark -->
     <path
         android:pathData="
-            M256,88
-            C180,88 128,132 128,192
-            C128,240 158,268 200,284
-            L256,304
-            C296,318 312,332 312,360
-            C312,392 286,416 256,416
-            C220,416 196,396 184,368
-            L128,392
-            C148,436 198,464 256,464
-            C336,464 384,416 384,360
-            C384,308 352,280 310,264
-            L254,244
-            C216,230 200,216 200,192
-            C200,164 224,144 256,144
-            C284,144 306,158 318,180
-            L374,156
-            C354,116 308,88 256,88 Z">
+            M54,24
+            C41.8,24 32,31.2 32,41.5
+            C32,49.2 37.2,54.2 44.5,57.1
+            L54,60.8
+            C60.8,63.4 63.5,66 63.5,71.5
+            C63.5,77.4 59.1,81.5 54,81.5
+            C47.8,81.5 43.6,77.9 41.5,72.5
+            L32,76.5
+            C35.4,85.2 44,91 54,91
+            C67.2,91 76,82.2 76,71.5
+            C76,62.5 70.6,57.4 63.2,54.5
+            L53.7,50.8
+            C47.2,48.2 44.5,45.6 44.5,41.5
+            C44.5,36.8 48.7,33.5 54,33.5
+            C59.1,33.5 62.8,36.2 64.8,40.5
+            L74.3,36.5
+            C70.8,29.2 63.2,24 54,24 Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="128"
-                android:startY="88"
-                android:endX="384"
-                android:endY="464"
+                android:startX="32"
+                android:startY="24"
+                android:endX="76"
+                android:endY="91"
                 android:type="linear">
                 <item android:offset="0" android:color="#FFFFFF"/>
-                <item android:offset="1" android:color="#C8DCFF"/>
+                <item android:offset="0.5" android:color="#D0ECFF"/>
+                <item android:offset="1" android:color="#A8D8F0"/>
             </gradient>
         </aapt:attr>
     </path>
+
+    <!-- Top-left accent dot -->
+    <path
+        android:pathData="M28,28 A3,3 0 1,1 27.99,28 Z"
+        android:fillColor="#4DFFFFFF" />
+
+    <!-- Bottom-right accent dot -->
+    <path
+        android:pathData="M80,80 A3,3 0 1,1 79.99,80 Z"
+        android:fillColor="#4DFFFFFF" />
+
 </vector>

@@ -105,8 +105,7 @@ fun HomeScreen(
     // Calculate if Other Apps button should be visible
     val useExpertMode by prefs.useExpertMode.getAsState()
     val showOtherAppsButton = remember(useExpertMode, sources) {
-        if (useExpertMode) true // Always show in expert mode
-        else sources.size > 1 // In simple mode, show only if there are multiple bundles
+        sources.isNotEmpty() // Show whenever at least one patch source is configured
     }
 
     // Set up HomeViewModel

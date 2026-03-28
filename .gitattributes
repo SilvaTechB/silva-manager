@@ -1,7 +1,5 @@
 * text=auto
-
-# Ensure the Gradle wrapper uses LF endings so CI can execute it
 gradlew text eol=lf
-
-# Keep Windows batch wrappers with CRLF endings
 *.bat text eol=crlf
+*.apk filter=lfs diff=lfs merge=lfs -text
+*.aab filter=lfs diff=lfs merge=lfs -text

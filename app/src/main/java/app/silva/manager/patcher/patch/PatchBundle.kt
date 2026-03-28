@@ -91,16 +91,21 @@ data class PatchBundle(val patchesJar: String) : Parcelable {
 
         private fun validateDexEntries(jarPath: String) {
             JarFile(jarPath).use { jar ->
-                val dexEntries = jar.entries().toList().filter { entry ->
-                    val name = entry.name.lowercase()
-                    name.endsWith(".dex")
-                }
-                if (dexEntries.isEmpty()) {
-                    throw IllegalStateException("Patch bundle is missing dex entries")
-                }
-                val hasEmptyDex = dexEntries.any { it.size <= 0L }
-                if (hasEmptyDex) {
-                    throw IllegalStateException("Patch bundle contains empty dex entries")
+                val entries = jar.entries().toList()
+                val dexEntries = entries.filter { it.name.lowercase().endsWith(".dex") }
+                val classEntries = entries.filter { it.name.lowercase().endsWith(".class") }
+
+                when {
+                    dexEntries.isNotEmpty() -> {
+                        val hasEmptyDex = dexEntries.any { it.size <= 0L }
+                        if (hasEmptyDex) {
+                            throw IllegalStateException("Patch bundle contains empty dex entries")
+                        }
+                    }
+                    classEntries.isNotEmpty() -> {
+                        // Bundle uses JVM class files — valid format for this patcher version
+                    }
+                    else -> throw IllegalStateException("Patch bundle is missing dex or class entries")
                 }
             }
         }

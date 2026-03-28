@@ -48,6 +48,16 @@ dependencyResolutionManagement {
             }
         }
         maven {
+            // Transitive dependencies of silva-patcher (apktool-lib, multidexlib2, jadb)
+            url = uri("https://maven.pkg.github.com/MorpheApp/registry")
+            credentials {
+                val gprUser: String? = providers.gradleProperty("gpr.user").orNull
+                val gprKey: String? = providers.gradleProperty("gpr.key").orNull
+                username = System.getenv("GITHUB_ACTOR") ?: gprUser
+                password = System.getenv("GITHUB_TOKEN") ?: gprKey
+            }
+        }
+        maven {
             url = uri("https://maven.pkg.github.com/SilvaTechB/silva-library")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")

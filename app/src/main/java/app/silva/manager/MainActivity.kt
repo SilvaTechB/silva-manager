@@ -97,13 +97,13 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Handles deep links for adding patch sources.
-     * Format: https://morphe.software/add-source?github=owner/repo[&name=Display+Name]
+     * Format: https://silvatech.co.ke/add-source?github=owner/repo[&name=Display+Name]
      * Only GitHub URLs are accepted for safety.
      */
     private fun handleDeepLinkIntent(intent: Intent?, vm: MainViewModel) {
         val data = intent?.data ?: return
         val isAddSource = data.scheme == "https" &&
-                data.host == "morphe.software" &&
+                data.host == "silvatech.co.ke" &&
                 data.path?.startsWith("/add-source") == true
         if (!isAddSource) return
 

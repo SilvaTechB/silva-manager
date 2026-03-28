@@ -11,7 +11,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -156,10 +159,23 @@ fun HomeDialogs(
     ) {
         val appName = homeViewModel.pendingAppName ?: return@AnimatedVisibility
         val isOtherApps = homeViewModel.pendingPackageName == null
+        val patchablePackages by homeViewModel.patchablePackagesFlow.collectAsStateWithLifecycle()
+        val context = LocalContext.current
+        val patchableInstalledApps = remember(patchablePackages) {
+            if (!isOtherApps) emptyList()
+            else patchablePackages.mapNotNull { pkg ->
+                try {
+                    val info = context.packageManager.getApplicationInfo(pkg, 0)
+                    val label = context.packageManager.getApplicationLabel(info).toString()
+                    Pair(pkg, label)
+                } catch (_: Exception) { null }
+            }.sortedBy { it.second }
+        }
 
         FilePickerPromptDialog(
             appName = appName,
             isOtherApps = isOtherApps,
+            patchableInstalledApps = patchableInstalledApps,
             onDismiss = {
                 homeViewModel.showFilePickerPromptDialog = false
                 homeViewModel.cleanupPendingData()
@@ -167,6 +183,10 @@ fun HomeDialogs(
             onOpenFilePicker = {
                 homeViewModel.showFilePickerPromptDialog = false
                 storagePickerLauncher()
+            },
+            onInstalledAppSelected = { packageName ->
+                homeViewModel.showFilePickerPromptDialog = false
+                homeViewModel.showPatchDialog(packageName)
             }
         )
     }
@@ -763,8 +783,10 @@ private fun InstructionStep(
 private fun FilePickerPromptDialog(
     appName: String,
     isOtherApps: Boolean,
+    patchableInstalledApps: List<Pair<String, String>> = emptyList(),
     onDismiss: () -> Unit,
-    onOpenFilePicker: () -> Unit
+    onOpenFilePicker: () -> Unit,
+    onInstalledAppSelected: (packageName: String) -> Unit = {}
 ) {
     SilvaDialog(
         onDismissRequest = onDismiss,
@@ -797,6 +819,62 @@ private fun FilePickerPromptDialog(
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
+
+        if (isOtherApps && patchableInstalledApps.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Installed apps with patches available",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(4.dp))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 240.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                items(patchableInstalledApps, key = { it.first }) { (pkg, label) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onInstalledAppSelected(pkg) }
+                            .padding(vertical = 10.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Android,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = pkg,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = secondaryColor
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Outlined.ChevronRight,
+                            contentDescription = null,
+                            tint = secondaryColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

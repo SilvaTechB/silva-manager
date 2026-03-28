@@ -51,7 +51,7 @@ enum class PatcherState {
  * Manages patching progress, dialogs, and installation flow
  */
 @Stable
-class MorphePatcherState(
+class SilvaPatcherState(
     val viewModel: PatcherViewModel
 ) {
     // Error handling
@@ -81,11 +81,11 @@ class MorphePatcherState(
  * Remember patcher state with proper lifecycle
  */
 @Composable
-fun rememberMorphePatcherState(
+fun rememberSilvaPatcherState(
     viewModel: PatcherViewModel
-): MorphePatcherState {
+): SilvaPatcherState {
     return remember(viewModel) {
-        MorphePatcherState(viewModel)
+        SilvaPatcherState(viewModel)
     }
 }
 
@@ -627,7 +627,7 @@ private fun getSubtitleForState(
  */
 @Composable
 fun PatchingFailed(
-    state: MorphePatcherState,
+    state: SilvaPatcherState,
     onHomeClick: () -> Unit
 ) {
     val windowSize = rememberWindowSize()

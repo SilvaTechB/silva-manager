@@ -1220,7 +1220,7 @@ class PatchBundleRepository(
         )
     }
 
-    suspend fun updateOnlyMorpheBundle(
+    suspend fun updateOnlySilvaBundle(
         force: Boolean = false,
         showToast: Boolean = false
     ) {

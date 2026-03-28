@@ -488,7 +488,7 @@ private fun ApkAvailabilityDialog(
     onNeedApk: () -> Unit,
     onUseSaved: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.home_apk_availability_dialog_title),
         footer = {
@@ -497,7 +497,7 @@ private fun ApkAvailabilityDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Main action buttons
-                MorpheDialogButtonRow(
+                SilvaDialogButtonRow(
                     primaryText = stringResource(R.string.home_apk_availability_yes),
                     onPrimaryClick = onNeedApk,
                     primaryIcon = Icons.Outlined.Download,
@@ -509,7 +509,7 @@ private fun ApkAvailabilityDialog(
 
                 // Saved APK button (if available)
                 if (savedApkInfo != null) {
-                    MorpheDialogOutlinedButton(
+                    SilvaDialogOutlinedButton(
                         text = stringResource(
                             R.string.home_apk_use_saved_with_version,
                             savedApkInfo.version
@@ -601,11 +601,11 @@ private fun DownloadInstructionsDialog(
 ) {
     val context = LocalContext.current
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.home_download_instructions_title),
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(R.string.home_download_instructions_continue),
                 onClick = onContinue,
                 icon = Icons.AutoMirrored.Outlined.OpenInNew,
@@ -766,7 +766,7 @@ private fun FilePickerPromptDialog(
     onDismiss: () -> Unit,
     onOpenFilePicker: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(
             if (isOtherApps) {
@@ -776,7 +776,7 @@ private fun FilePickerPromptDialog(
             }
         ),
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(R.string.home_file_picker_prompt_open_apk),
                 onClick = onOpenFilePicker,
                 icon = Icons.Outlined.FolderOpen,
@@ -814,11 +814,11 @@ private fun UnsupportedVersionWarningDialog(
     onDismiss: () -> Unit,
     onProceed: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.home_dialog_unsupported_version_dialog_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.home_dialog_unsupported_version_dialog_proceed),
                 onPrimaryClick = onProceed,
                 isPrimaryDestructive = true,
@@ -954,11 +954,11 @@ fun InvalidSignatureDialog(
     onProceed: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.home_invalid_signature_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.home_split_apk_warning_pick_another),
                 onPrimaryClick = onPickAnother,
                 primaryIcon = Icons.Outlined.FolderOpen,
@@ -1009,11 +1009,11 @@ fun SplitApkWarningDialog(
     onPickAnother: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.home_split_apk_warning_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.home_split_apk_warning_pick_another),
                 onPrimaryClick = onPickAnother,
                 primaryIcon = Icons.Outlined.FolderOpen,
@@ -1063,11 +1063,11 @@ fun ExperimentalVersionWarningDialog(
     onDismiss: () -> Unit,
     onProceed: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.morphe_experimental_app_version_dialog_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.home_dialog_unsupported_version_dialog_proceed),
                 onPrimaryClick = onProceed,
                 secondaryText = stringResource(android.R.string.cancel),
@@ -1102,11 +1102,11 @@ fun WrongPackageDialog(
     actualPackage: String,
     onDismiss: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.home_dialog_wrong_package_title),
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(android.R.string.ok),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
@@ -1284,11 +1284,11 @@ fun LowDiskSpaceDialog(
     onDismiss: () -> Unit,
     onPatchAnyway: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.home_low_disk_space_dialog_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.home_dialog_unsupported_version_dialog_proceed),
                 onPrimaryClick = onPatchAnyway,
                 isPrimaryDestructive = true,
@@ -1337,7 +1337,7 @@ fun MeteredPatchingDialog(
     onRefreshAndPatch: () -> Unit,
     onPatchAnyway: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.home_outdated_patches_dialog_title),
         footer = {
@@ -1345,13 +1345,13 @@ fun MeteredPatchingDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                MorpheDialogButton(
+                SilvaDialogButton(
                     text = stringResource(R.string.home_outdated_patches_dialog_update_and_patch),
                     onClick = onRefreshAndPatch,
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Outlined.SystemUpdateAlt
                 )
-                MorpheDialogButtonRow(
+                SilvaDialogButtonRow(
                     primaryText = stringResource(R.string.home_dialog_unsupported_version_dialog_proceed),
                     onPrimaryClick = onPatchAnyway,
                     isPrimaryDestructive = true,
@@ -1402,11 +1402,11 @@ fun DeepLinkAddSourceDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.deep_link_add_source_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.add),
                 onPrimaryClick = onConfirm,
                 primaryIcon = Icons.Outlined.Extension,

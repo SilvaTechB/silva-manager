@@ -9,8 +9,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import app.silva.manager.R
 import app.silva.manager.ui.screen.shared.LocalDialogSecondaryTextColor
-import app.silva.manager.ui.screen.shared.MorpheDialog
-import app.silva.manager.ui.screen.shared.MorpheDialogButtonRow
+import app.silva.manager.ui.screen.shared.SilvaDialog
+import app.silva.manager.ui.screen.shared.SilvaDialogButtonRow
 
 /**
  * Dialog shown on Android 11+ when install apps permission is needed
@@ -20,11 +20,11 @@ fun Android11Dialog(
     onDismissRequest: () -> Unit,
     onContinue: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(R.string.android_11_bug_dialog_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.continue_),
                 onPrimaryClick = onContinue,
                 secondaryText = stringResource(android.R.string.cancel),

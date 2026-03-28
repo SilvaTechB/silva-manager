@@ -52,8 +52,8 @@ import app.silva.manager.ui.screen.settings.system.InstallerSelectionDialog
 import app.silva.manager.ui.screen.settings.system.ensureValidEntries
 import app.silva.manager.ui.screen.shared.InfoBadge
 import app.silva.manager.ui.screen.shared.InfoBadgeStyle
-import app.silva.manager.ui.screen.shared.MorpheCard
-import app.silva.manager.ui.screen.shared.MorpheSettingsDivider
+import app.silva.manager.ui.screen.shared.SilvaCard
+import app.silva.manager.ui.screen.shared.SilvaSettingsDivider
 import app.silva.manager.ui.viewmodel.InstallViewModel
 import app.silva.manager.ui.viewmodel.PatcherViewModel
 import app.silva.manager.ui.viewmodel.SettingsViewModel
@@ -97,7 +97,7 @@ fun PatcherScreen(
     val patcherSucceeded by patcherViewModel.patcherSucceeded.observeAsState(null)
 
     // Remember patcher state
-    val state = rememberMorphePatcherState(patcherViewModel)
+    val state = rememberSilvaPatcherState(patcherViewModel)
 
     // Notification prompt: shown once after first successful install or save
     var showNotificationPrompt by rememberSaveable { mutableStateOf(false) }
@@ -444,7 +444,7 @@ fun PatcherScreen(
 
                 // Error message card
                 CompositionLocalProvider(LocalOverscrollFactory provides null) {
-                    MorpheCard(
+                    SilvaCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f, fill = false)
@@ -475,7 +475,7 @@ fun PatcherScreen(
                                 )
                             }
 
-                            MorpheSettingsDivider(fullWidth = true)
+                            SilvaSettingsDivider(fullWidth = true)
 
                             // Scrollable error message
                             Box(

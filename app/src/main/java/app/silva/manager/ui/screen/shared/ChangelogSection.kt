@@ -41,7 +41,7 @@ fun ChangelogButton(
     val uriHandler = LocalUriHandler.current
 
     pageUrl?.let { url ->
-        MorpheDialogOutlinedButton(
+        SilvaDialogOutlinedButton(
             text = stringResource(R.string.changelog),
             onClick = { uriHandler.openUri(url) },
             icon = Icons.AutoMirrored.Outlined.Article,

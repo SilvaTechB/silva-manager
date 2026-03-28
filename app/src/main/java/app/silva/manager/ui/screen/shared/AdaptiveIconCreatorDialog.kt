@@ -197,7 +197,7 @@ fun AdaptiveIconCreatorDialog(
         }
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.adaptive_icon_create),
         compactPadding = true,
@@ -224,7 +224,7 @@ fun AdaptiveIconCreatorDialog(
                 }
 
                 // Create button
-                MorpheDialogButton(
+                SilvaDialogButton(
                     text = stringResource(R.string.adaptive_icon_create),
                     onClick = { folderPicker.launch(null) },
                     enabled = foregroundBitmap != null,
@@ -282,7 +282,7 @@ fun AdaptiveIconCreatorDialog(
             }
 
             // Foreground selection
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = if (foregroundUri == null)
                     stringResource(R.string.adaptive_icon_select_image)
                 else

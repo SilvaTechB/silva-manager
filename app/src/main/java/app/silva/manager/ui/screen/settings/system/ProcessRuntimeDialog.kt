@@ -45,11 +45,11 @@ fun ProcessRuntimeDialog(
     var enabled by remember { mutableStateOf(currentEnabled) }
     var sliderValue by remember { mutableFloatStateOf(currentLimit.toFloat()) }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_system_process_runtime),
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(R.string.close),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
@@ -120,7 +120,7 @@ fun ProcessRuntimeDialog(
                 modifier = Modifier.alpha(if (enabled) 1f else 0.5f),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                MorpheSettingsDivider(fullWidth = true)
+                SilvaSettingsDivider(fullWidth = true)
 
                 // Memory limit header
                 Row(

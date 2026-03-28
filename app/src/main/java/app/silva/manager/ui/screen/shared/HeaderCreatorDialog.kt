@@ -227,7 +227,7 @@ fun HeaderCreatorDialog(
         }
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.header_creator_create),
         compactPadding = false,
@@ -254,7 +254,7 @@ fun HeaderCreatorDialog(
                 }
 
                 // Create button
-                MorpheDialogButton(
+                SilvaDialogButton(
                     text = stringResource(R.string.header_creator_create),
                     onClick = { folderPicker.launch(null) },
                     enabled = canCreate,
@@ -319,7 +319,7 @@ fun HeaderCreatorDialog(
                     }
                 }
 
-                MorpheDialogButton(
+                SilvaDialogButton(
                     text = if (lightHeaderUri == null)
                         stringResource(R.string.adaptive_icon_select_image)
                     else
@@ -375,7 +375,7 @@ fun HeaderCreatorDialog(
                 }
             }
 
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = if (darkHeaderUri == null)
                     stringResource(R.string.adaptive_icon_select_image)
                 else

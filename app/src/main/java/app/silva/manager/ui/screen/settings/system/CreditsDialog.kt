@@ -54,10 +54,10 @@ private val priorContributors = listOf(
 fun CreditsDialog(onDismiss: () -> Unit) {
     val uriHandler = LocalUriHandler.current
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         footer = {
-            MorpheDialogOutlinedButton(
+            SilvaDialogOutlinedButton(
                 text = stringResource(R.string.close),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
@@ -97,7 +97,7 @@ fun CreditsDialog(onDismiss: () -> Unit) {
                                 onClick = { uriHandler.openUri(contributor.url) }
                             )
                             if (index < currentContributors.lastIndex) {
-                                MorpheSettingsDivider()
+                                SilvaSettingsDivider()
                             }
                         }
                     }
@@ -121,7 +121,7 @@ fun CreditsDialog(onDismiss: () -> Unit) {
                                 onClick = { uriHandler.openUri(contributor.url) }
                             )
                             if (index < priorContributors.lastIndex) {
-                                MorpheSettingsDivider()
+                                SilvaSettingsDivider()
                             }
                         }
                     }
@@ -140,7 +140,7 @@ private fun ContributorItem(
     BaseSettingsItem(
         onClick = onClick,
         leadingContent = {
-            MorpheIcon(icon = FontAwesomeIcons.Brands.Github)
+            SilvaIcon(icon = FontAwesomeIcons.Brands.Github)
         },
         title = contributor.name,
         trailingContent = {

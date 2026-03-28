@@ -109,7 +109,7 @@ fun InstallerSection(
 
         // Prompt installer toggle (Expert mode only)
         if (expertMode) {
-            MorpheSettingsDivider()
+            SilvaSettingsDivider()
 
             RichSettingsItem(
                 onClick = {
@@ -118,7 +118,7 @@ fun InstallerSection(
                     }
                 },
                 leadingContent = {
-                    MorpheIcon(icon = Icons.Outlined.Android)
+                    SilvaIcon(icon = Icons.Outlined.Android)
                 },
                 title = stringResource(R.string.settings_prompt_installer_on_install),
                 subtitle = stringResource(R.string.settings_prompt_installer_on_install_description),
@@ -213,7 +213,7 @@ private fun InstallerSettingsItem(
                     enabled = entry.availability.available
                 )
             } else {
-                MorpheIcon(icon = Icons.Outlined.Android)
+                SilvaIcon(icon = Icons.Outlined.Android)
             }
         },
         title = title,
@@ -259,11 +259,11 @@ fun InstallerSelectionDialog(
     val notSelectedState = stringResource(R.string.not_selected)
     val disabledState = stringResource(R.string.disabled)
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = title,
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.confirm),
                 onPrimaryClick = { onConfirm(currentSelection) },
                 primaryEnabled = confirmEnabled,
@@ -526,13 +526,13 @@ fun InstallerUnavailableDialog(
 
     val reasonText = state.reason?.let { stringResource(it) }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.installer_unavailable_title, installerName),
         footer = {
-            MorpheDialogButtonColumn {
+            SilvaDialogButtonColumn {
                 // Primary action - Retry
-                MorpheDialogButton(
+                SilvaDialogButton(
                     text = stringResource(R.string.retry),
                     onClick = onRetry,
                     modifier = Modifier.fillMaxWidth()
@@ -540,7 +540,7 @@ fun InstallerUnavailableDialog(
 
                 // Secondary action - Open app (if available)
                 if (state.canOpenApp) {
-                    MorpheDialogButton(
+                    SilvaDialogButton(
                         text = when (state.installerToken) {
                             InstallerManager.Token.Shizuku -> stringResource(R.string.installer_action_open_shizuku)
                             else -> stringResource(R.string.open)
@@ -551,14 +551,14 @@ fun InstallerUnavailableDialog(
                 }
 
                 // Fallback option
-                MorpheDialogOutlinedButton(
+                SilvaDialogOutlinedButton(
                     text = stringResource(R.string.installer_use_standard),
                     onClick = onUseFallback,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 // Cancel
-                MorpheDialogOutlinedButton(
+                SilvaDialogOutlinedButton(
                     text = stringResource(android.R.string.cancel),
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()
@@ -618,11 +618,11 @@ fun PrePatchInstallerDialog(
     onSelectStandard: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.root_pre_patch_installer_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(android.R.string.cancel),
                 onPrimaryClick = onDismiss
             )

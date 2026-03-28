@@ -53,11 +53,11 @@ fun ColorPickerDialog(
 
     val previewColor = Color(red, green, blue)
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = title,
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.save),
                 onPrimaryClick = {
                     onColorSelected(hexInput)
@@ -95,7 +95,7 @@ fun ColorPickerDialog(
             }
 
             // Hex input
-            MorpheDialogTextField(
+            SilvaDialogTextField(
                 value = hexInput,
                 onValueChange = { input ->
                     hexInput = input

@@ -77,7 +77,7 @@ fun ThemeColorDialog(
     val defaultDarkColor = darkPresets.entries.firstOrNull()?.value?.toString() ?: "@android:color/black"
     val defaultLightColor = lightPresets.entries.firstOrNull()?.value?.toString() ?: "@android:color/white"
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_advanced_patch_options_theme_colors),
         titleTrailingContent = {
@@ -100,7 +100,7 @@ fun ThemeColorDialog(
             }
         },
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(R.string.save),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
@@ -297,11 +297,11 @@ fun CustomBrandingDialog(
         }
     )
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_advanced_patch_options_custom_branding),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.save),
                 onPrimaryClick = {
                     scope.launch {
@@ -323,7 +323,7 @@ fun CustomBrandingDialog(
         ) {
             // App Name field
             if (appNameOption != null) {
-                MorpheDialogTextField(
+                SilvaDialogTextField(
                     value = appName,
                     onValueChange = { appName = it },
                     label = {
@@ -338,7 +338,7 @@ fun CustomBrandingDialog(
 
             // Icon Path field with Folder Picker
             if (iconOption != null) {
-                MorpheDialogTextField(
+                SilvaDialogTextField(
                     value = iconPath,
                     onValueChange = { iconPath = it },
                     label = {
@@ -354,7 +354,7 @@ fun CustomBrandingDialog(
                 Spacer(modifier = Modifier.height(0.dp))
 
                 // Create Icon button
-                MorpheDialogOutlinedButton(
+                SilvaDialogOutlinedButton(
                     text = stringResource(R.string.adaptive_icon_create),
                     onClick = { showIconCreator = true },
                     icon = Icons.Outlined.AutoAwesome,
@@ -433,11 +433,11 @@ fun CustomHeaderDialog(
         }
     )
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_advanced_patch_options_custom_header),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.save),
                 onPrimaryClick = {
                     scope.launch {
@@ -455,7 +455,7 @@ fun CustomHeaderDialog(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (customOption != null) {
-                MorpheDialogTextField(
+                SilvaDialogTextField(
                     value = headerPath,
                     onValueChange = { headerPath = it },
                     label = {
@@ -471,7 +471,7 @@ fun CustomHeaderDialog(
                 Spacer(modifier = Modifier.height(0.dp))
 
                 // Create Header button
-                MorpheDialogOutlinedButton(
+                SilvaDialogOutlinedButton(
                     text = stringResource(R.string.header_creator_create),
                     onClick = { showHeaderCreator = true },
                     icon = Icons.Outlined.Image,

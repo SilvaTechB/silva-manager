@@ -189,11 +189,11 @@ private fun AppIconChangeDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_appearance_app_icon_change_dialog_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.settings_appearance_app_icon_change_dialog_confirm),
                 onPrimaryClick = onConfirm,
                 secondaryText = stringResource(android.R.string.cancel),

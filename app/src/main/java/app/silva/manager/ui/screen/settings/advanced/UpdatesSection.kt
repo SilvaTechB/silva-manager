@@ -140,7 +140,7 @@ fun UpdatesSettingsItem(
             onManagerPrereleasesToggle()
         },
         showBorder = true,
-        leadingContent = { MorpheIcon(icon = Icons.Outlined.Science) },
+        leadingContent = { SilvaIcon(icon = Icons.Outlined.Science) },
         title = stringResource(R.string.settings_advanced_updates_use_prereleases),
         subtitle = stringResource(R.string.settings_advanced_updates_use_prereleases_description),
         trailingContent = {
@@ -176,7 +176,7 @@ fun UpdatesSettingsItem(
             }
         },
         showBorder = true,
-        leadingContent = { MorpheIcon(icon = Icons.Outlined.NotificationsActive) },
+        leadingContent = { SilvaIcon(icon = Icons.Outlined.NotificationsActive) },
         title = stringResource(R.string.settings_advanced_updates_background_notifications),
         subtitle = stringResource(
             if (hasGms) R.string.settings_advanced_updates_background_notifications_description_fcm
@@ -203,7 +203,7 @@ fun UpdatesSettingsItem(
         RichSettingsItem(
             onClick = { showIntervalDialog = true },
             showBorder = true,
-            leadingContent = { MorpheIcon(icon = Icons.Outlined.Schedule) },
+            leadingContent = { SilvaIcon(icon = Icons.Outlined.Schedule) },
             title = stringResource(R.string.settings_advanced_update_interval),
             subtitle = stringResource(updateCheckInterval.labelResId)
         )
@@ -215,7 +215,7 @@ fun UpdatesSettingsItem(
             scope.launch { prefs.allowMeteredUpdates.update(!allowMeteredUpdates) }
         },
         showBorder = true,
-        leadingContent = { MorpheIcon(icon = Icons.Outlined.SignalCellularAlt) },
+        leadingContent = { SilvaIcon(icon = Icons.Outlined.SignalCellularAlt) },
         title = stringResource(R.string.settings_advanced_updates_allow_metered),
         subtitle = stringResource(R.string.settings_advanced_updates_allow_metered_description),
         trailingContent = {
@@ -245,11 +245,11 @@ fun NotificationPermissionDialog(
         onResult = onPermissionResult
     )
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismissRequest,
         title = title,
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.allow),
                 onPrimaryClick = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -286,11 +286,11 @@ private fun UpdateCheckIntervalDialog(
     var sliderIndex by remember { mutableFloatStateOf(entries.indexOf(currentInterval).toFloat()) }
     val selectedInterval = entries[sliderIndex.toInt().coerceIn(entries.indices)]
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_advanced_update_interval_dialog_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.save),
                 onPrimaryClick = { onIntervalSelected(selectedInterval) },
                 primaryIcon = Icons.Outlined.Check,

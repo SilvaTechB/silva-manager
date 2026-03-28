@@ -40,11 +40,11 @@ fun KeystoreCredentialsDialog(
     var alias by rememberSaveable { mutableStateOf("") }
     var pass by rememberSaveable { mutableStateOf("") }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_system_import_keystore_dialog_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.settings_system_import_keystore_dialog_button),
                 onPrimaryClick = { onSubmit(alias, pass) },
                 secondaryText = stringResource(android.R.string.cancel),
@@ -67,7 +67,7 @@ fun KeystoreCredentialsDialog(
             )
 
             // Alias Input
-            MorpheDialogTextField(
+            SilvaDialogTextField(
                 value = alias,
                 onValueChange = { alias = it },
                 label = {
@@ -84,7 +84,7 @@ fun KeystoreCredentialsDialog(
             )
 
             // Password Input
-            MorpheDialogTextField(
+            SilvaDialogTextField(
                 value = pass,
                 onValueChange = { pass = it },
                 label = {

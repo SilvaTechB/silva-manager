@@ -120,7 +120,7 @@ fun InfoBadge(
             verticalAlignment = Alignment.CenterVertically
         ) {
             icon?.let {
-                MorpheIcon(
+                SilvaIcon(
                     icon = it,
                     tint = contentColor,
                     size = iconSize

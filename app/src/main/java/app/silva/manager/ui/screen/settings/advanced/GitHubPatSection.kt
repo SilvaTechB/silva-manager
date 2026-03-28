@@ -41,7 +41,7 @@ fun GitHubPatSettingsItem(
         onClick = { showDialog = true },
         showBorder = true,
         leadingContent = {
-            MorpheIcon(icon = Icons.Outlined.VpnKey)
+            SilvaIcon(icon = Icons.Outlined.VpnKey)
         },
         title = stringResource(R.string.settings_advanced_github_pat),
         subtitle = if (hasPat) {
@@ -60,7 +60,7 @@ fun GitHubPatSettingsItem(
                     style = if (hasPat) InfoBadgeStyle.Primary else InfoBadgeStyle.Default,
                     isCompact = true
                 )
-                MorpheIcon(icon = Icons.Outlined.ChevronRight)
+                SilvaIcon(icon = Icons.Outlined.ChevronRight)
             }
         }
     )
@@ -96,11 +96,11 @@ private fun GitHubPatDialog(
     val scope = rememberCoroutineScope()
     val generatePatLink = "https://github.com/settings/tokens/new?scopes=public_repo&description=silva-manager-github-integration"
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_advanced_github_pat_dialog_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.save),
                 onPrimaryClick = {
                     scope.launch {
@@ -118,7 +118,7 @@ private fun GitHubPatDialog(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // Info button section
-            MorpheDialogOutlinedButton(
+            SilvaDialogOutlinedButton(
                 text = stringResource(R.string.settings_advanced_github_pat_how_to_get),
                 onClick = { showInfoDialog = true },
                 icon = Icons.Outlined.Info,
@@ -130,7 +130,7 @@ private fun GitHubPatDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                MorpheDialogTextField(
+                SilvaDialogTextField(
                     value = pat,
                     onValueChange = { pat = it },
                     label = {
@@ -164,7 +164,7 @@ private fun GitHubPatDialog(
                     },
                     showBorder = true,
                     leadingContent = {
-                        MorpheIcon(
+                        SilvaIcon(
                             icon = Icons.Outlined.Upload,
                             tint = LocalDialogTextColor.current
                         )
@@ -194,7 +194,7 @@ private fun GitHubPatDialog(
 
     // Info dialog with link to GitHub token creation
     if (showInfoDialog) {
-        MorpheDialogWithLinks(
+        SilvaDialogWithLinks(
             title = stringResource(R.string.settings_advanced_github_pat_how_to_get),
             message = stringResource(R.string.settings_advanced_github_pat_dialog_description),
             urlLink = generatePatLink,
@@ -204,11 +204,11 @@ private fun GitHubPatDialog(
 
     // Include warning confirmation dialog
     if (showIncludeWarning) {
-        MorpheDialog(
+        SilvaDialog(
             onDismissRequest = { showIncludeWarning = false },
             title = stringResource(R.string.warning),
             footer = {
-                MorpheDialogButtonRow(
+                SilvaDialogButtonRow(
                     primaryText = stringResource(R.string.confirm),
                     onPrimaryClick = {
                         includePatInExport = true

@@ -1,8 +1,8 @@
 // IPatcherProcess.aidl
-package app.morphe.manager.patcher.runtime.process;
+package app.silva.manager.patcher.runtime.process;
 
-import app.morphe.manager.patcher.runtime.process.Parameters;
-import app.morphe.manager.patcher.runtime.process.IPatcherEvents;
+import app.silva.manager.patcher.runtime.process.Parameters;
+import app.silva.manager.patcher.runtime.process.IPatcherEvents;
 
 interface IPatcherProcess {
     // Returns BuildConfig.BUILD_ID, which is used to ensure the main app and runner process are running the same code.

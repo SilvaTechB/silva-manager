@@ -136,7 +136,7 @@ fun SystemTabContent(
                         stringResource(R.string.settings_system_process_runtime_enabled_description, memoryLimit)
                     else stringResource(R.string.settings_system_process_runtime_disabled_description),
                     leadingContent = {
-                        MorpheIcon(icon = Icons.Outlined.Memory)
+                        SilvaIcon(icon = Icons.Outlined.Memory)
                     },
                     trailingContent = {
                         Row(
@@ -149,7 +149,7 @@ fun SystemTabContent(
                                 style = if (useProcessRuntime) InfoBadgeStyle.Primary else InfoBadgeStyle.Default,
                                 isCompact = true
                             )
-                            MorpheIcon(icon = Icons.Outlined.ChevronRight)
+                            SilvaIcon(icon = Icons.Outlined.ChevronRight)
                         }
                     }
                 )
@@ -157,7 +157,7 @@ fun SystemTabContent(
                 IconTextRow(
                     modifier = Modifier.padding(16.dp),
                     leadingContent = {
-                        MorpheIcon(
+                        SilvaIcon(
                             icon = Icons.Outlined.Memory,
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                         )
@@ -180,12 +180,12 @@ fun SystemTabContent(
                     // Keystore Import
                     BaseSettingsItem(
                         onClick = onImportKeystore,
-                        leadingContent = { MorpheIcon(icon = Icons.Outlined.Key) },
+                        leadingContent = { SilvaIcon(icon = Icons.Outlined.Key) },
                         title = stringResource(R.string.settings_system_import_keystore),
                         description = stringResource(R.string.settings_system_import_keystore_description)
                     )
 
-                    MorpheSettingsDivider()
+                    SilvaSettingsDivider()
 
                     // Keystore Export
                     BaseSettingsItem(
@@ -196,7 +196,7 @@ fun SystemTabContent(
                                 onExportKeystore()
                             }
                         },
-                        leadingContent = { MorpheIcon(icon = Icons.Outlined.Upload) },
+                        leadingContent = { SilvaIcon(icon = Icons.Outlined.Upload) },
                         title = stringResource(R.string.settings_system_export_keystore),
                         description = stringResource(R.string.settings_system_export_keystore_description)
                     )
@@ -208,17 +208,17 @@ fun SystemTabContent(
                     // Manager Settings Import
                     BaseSettingsItem(
                         onClick = onImportSettings,
-                        leadingContent = { MorpheIcon(icon = Icons.Outlined.Download) },
+                        leadingContent = { SilvaIcon(icon = Icons.Outlined.Download) },
                         title = stringResource(R.string.settings_system_import_manager_settings),
                         description = stringResource(R.string.settings_system_import_manager_settings_description)
                     )
 
-                    MorpheSettingsDivider()
+                    SilvaSettingsDivider()
 
                     // Manager Settings Export
                     BaseSettingsItem(
                         onClick = onExportSettings,
-                        leadingContent = { MorpheIcon(icon = Icons.Outlined.Upload) },
+                        leadingContent = { SilvaIcon(icon = Icons.Outlined.Upload) },
                         title = stringResource(R.string.settings_system_export_manager_settings),
                         description = stringResource(R.string.settings_system_export_manager_settings_description)
                     )
@@ -236,7 +236,7 @@ fun SystemTabContent(
             SectionCard {
                 BaseSettingsItem(
                     onClick = onExportDebugLogs,
-                    leadingContent = { MorpheIcon(icon = Icons.Outlined.Upload) },
+                    leadingContent = { SilvaIcon(icon = Icons.Outlined.Upload) },
                     title = stringResource(R.string.settings_system_export_debug_logs),
                     description = stringResource(R.string.settings_system_export_debug_logs_description)
                 )
@@ -261,7 +261,7 @@ fun SystemTabContent(
                     title = stringResource(R.string.settings_system_original_apks_title),
                     subtitle = stringResource(R.string.settings_system_original_apks_description),
                     leadingContent = {
-                        MorpheIcon(icon = Icons.Outlined.Storage)
+                        SilvaIcon(icon = Icons.Outlined.Storage)
                     },
                     trailingContent = {
                         Row(
@@ -275,12 +275,12 @@ fun SystemTabContent(
                                     isCompact = true
                                 )
                             }
-                            MorpheIcon(icon = Icons.Outlined.ChevronRight)
+                            SilvaIcon(icon = Icons.Outlined.ChevronRight)
                         }
                     }
                 )
 
-                MorpheSettingsDivider()
+                SilvaSettingsDivider()
 
                 // Patched APKs management
                 val installedAppRepository: InstalledAppRepository = koinInject()
@@ -292,7 +292,7 @@ fun SystemTabContent(
                     title = stringResource(R.string.settings_system_patched_apks_title),
                     subtitle = stringResource(R.string.settings_system_patched_apks_description),
                     leadingContent = {
-                        MorpheIcon(icon = Icons.Outlined.Apps)
+                        SilvaIcon(icon = Icons.Outlined.Apps)
                     },
                     trailingContent = {
                         Row(
@@ -306,14 +306,14 @@ fun SystemTabContent(
                                     isCompact = true
                                 )
                             }
-                            MorpheIcon(icon = Icons.Outlined.ChevronRight)
+                            SilvaIcon(icon = Icons.Outlined.ChevronRight)
                         }
                     }
                 )
 
                 // Patch Selections management (Expert mode only)
                 if (useExpertMode) {
-                    MorpheSettingsDivider()
+                    SilvaSettingsDivider()
 
                     val selectionRepository: PatchSelectionRepository = koinInject()
                     val optionsRepository: PatchOptionsRepository = koinInject()
@@ -336,7 +336,7 @@ fun SystemTabContent(
                         title = stringResource(R.string.settings_system_patch_selections_title),
                         subtitle = stringResource(R.string.settings_system_patch_selections_description),
                         leadingContent = {
-                            MorpheIcon(icon = Icons.Outlined.Tune)
+                            SilvaIcon(icon = Icons.Outlined.Tune)
                         },
                         trailingContent = {
                             Row(
@@ -350,7 +350,7 @@ fun SystemTabContent(
                                         isCompact = true
                                     )
                                 }
-                                MorpheIcon(icon = Icons.Outlined.ChevronRight)
+                                SilvaIcon(icon = Icons.Outlined.ChevronRight)
                             }
                         }
                     )

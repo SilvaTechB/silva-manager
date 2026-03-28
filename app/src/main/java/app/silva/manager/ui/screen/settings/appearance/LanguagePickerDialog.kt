@@ -59,11 +59,11 @@ fun LanguagePickerDialog(
 
     val listState = rememberLazyListState()
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_appearance_app_language),
         footer = {
-            MorpheDialogOutlinedButton(
+            SilvaDialogOutlinedButton(
                 text = stringResource(android.R.string.cancel),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
@@ -76,7 +76,7 @@ fun LanguagePickerDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Search field
-            MorpheDialogTextField(
+            SilvaDialogTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 label = {
@@ -136,7 +136,7 @@ private fun LanguageItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    MorpheCard(
+    SilvaCard(
         onClick = onClick,
         cornerRadius = 8.dp
     ) {

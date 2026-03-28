@@ -48,17 +48,17 @@ fun AboutDialog(onDismiss: () -> Unit) {
         CreditsDialog(onDismiss = { showCreditsDialog.value = false })
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         footer = {
-            MorpheDialogButtonColumn {
-                MorpheDialogOutlinedButton(
+            SilvaDialogButtonColumn {
+                SilvaDialogOutlinedButton(
                     text = stringResource(R.string.credits),
                     onClick = { showCreditsDialog.value = true },
                     icon = Icons.Outlined.People,
                     modifier = Modifier.fillMaxWidth()
                 )
-                MorpheDialogOutlinedButton(
+                SilvaDialogOutlinedButton(
                     text = stringResource(R.string.close),
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()

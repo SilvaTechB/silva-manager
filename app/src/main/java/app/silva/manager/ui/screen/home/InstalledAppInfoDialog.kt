@@ -314,7 +314,7 @@ fun InstalledAppInfoDialog(
     }
 
     // Main Dialog
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = null,
         dismissOnClickOutside = true,
@@ -456,7 +456,7 @@ private fun WarningBanner(
         MaterialTheme.colorScheme.onPrimaryContainer
     }
 
-    MorpheCard(
+    SilvaCard(
         cornerRadius = 12.dp,
         elevation = 2.dp
     ) {
@@ -516,7 +516,7 @@ private fun AppHeaderCard(
     packageName: String,
     installedApp: InstalledApp,
 ) {
-    MorpheCard(
+    SilvaCard(
         cornerRadius = 16.dp,
         elevation = 2.dp
     ) {
@@ -564,7 +564,7 @@ private fun InfoSection(
 ) {
     val totalPatches = appliedPatches?.values?.sumOf { it.size } ?: 0
 
-    MorpheCard(
+    SilvaCard(
         cornerRadius = 16.dp,
         elevation = 2.dp
     ) {
@@ -582,14 +582,14 @@ private fun InfoSection(
 
             // Original package (if different)
             if (installedApp.originalPackageName != installedApp.currentPackageName) {
-                MorpheSettingsDivider(fullWidth = true)
+                SilvaSettingsDivider(fullWidth = true)
                 InfoRow(
                     label = stringResource(R.string.home_app_info_original_package_name),
                     value = installedApp.originalPackageName
                 )
             }
 
-            MorpheSettingsDivider(fullWidth = true)
+            SilvaSettingsDivider(fullWidth = true)
 
             // Install type
             InfoRow(
@@ -599,7 +599,7 @@ private fun InfoSection(
 
             // Patched date (if available)
             installedApp.patchedAt?.let { timestamp ->
-                MorpheSettingsDivider(fullWidth = true)
+                SilvaSettingsDivider(fullWidth = true)
                 InfoRow(
                     label = stringResource(R.string.home_app_info_patched_at),
                     value = getRelativeTimeString(timestamp)
@@ -608,7 +608,7 @@ private fun InfoSection(
 
             // Applied patches with icon button
             if (totalPatches > 0) {
-                MorpheSettingsDivider(fullWidth = true)
+                SilvaSettingsDivider(fullWidth = true)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -643,7 +643,7 @@ private fun InfoSection(
 
             // Bundles used
             if (bundlesUsedSummary.isNotBlank()) {
-                MorpheSettingsDivider(fullWidth = true)
+                SilvaSettingsDivider(fullWidth = true)
                 InfoRow(
                     label = stringResource(R.string.home_app_info_patch_source_used),
                     value = bundlesUsedSummary
@@ -920,11 +920,11 @@ private fun MountWarningDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.warning),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(android.R.string.ok),
                 onPrimaryClick = onConfirm,
                 secondaryText = stringResource(android.R.string.cancel),
@@ -948,11 +948,11 @@ private fun UninstallConfirmDialog(
 ) {
     if (!show) return
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.uninstall),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.uninstall),
                 onPrimaryClick = onConfirm,
                 isPrimaryDestructive = true,
@@ -980,11 +980,11 @@ private fun DeleteConfirmDialog(
 ) {
     if (!show) return
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.delete),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.delete),
                 onPrimaryClick = onConfirm,
                 isPrimaryDestructive = true,
@@ -1061,11 +1061,11 @@ private fun AppliedPatchesDialog(
     bundles: List<AppliedPatchBundleUi>,
     onDismiss: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.home_app_info_applied_patches),
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(android.R.string.ok),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()

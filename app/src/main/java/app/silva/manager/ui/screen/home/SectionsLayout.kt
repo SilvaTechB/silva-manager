@@ -854,11 +854,11 @@ internal fun HideAppDialog(
     onDismiss: () -> Unit,
     onHide: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.home_app_hide_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.hide),
                 primaryIcon = Icons.Outlined.VisibilityOff,
                 onPrimaryClick = onHide,
@@ -932,12 +932,12 @@ internal fun HiddenAppsDialog(
     onUnhide: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         dismissOnClickOutside = true,
         title = stringResource(R.string.home_app_hidden_apps_title),
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(R.string.close),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
@@ -1047,7 +1047,7 @@ private fun HiddenAppRow(
             )
 
             // Eye icon
-            MorpheIcon(
+            SilvaIcon(
                 icon = Icons.Outlined.Visibility,
                 tint = textColor.copy(alpha = 0.45f),
                 size = 20.dp

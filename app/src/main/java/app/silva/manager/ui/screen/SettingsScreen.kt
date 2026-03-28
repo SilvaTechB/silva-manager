@@ -248,7 +248,7 @@ fun SettingsScreen(
         }
 
         // Bottom Navigation
-        MorpheBottomNavigation(
+        SilvaBottomNavigation(
             currentTab = currentTab,
             onTabSelected = { tab ->
                 coroutineScope.launch {
@@ -263,7 +263,7 @@ fun SettingsScreen(
  * Bottom navigation bar
  */
 @Composable
-private fun MorpheBottomNavigation(
+private fun SilvaBottomNavigation(
     currentTab: SettingsTab,
     onTabSelected: (SettingsTab) -> Unit
 ) {

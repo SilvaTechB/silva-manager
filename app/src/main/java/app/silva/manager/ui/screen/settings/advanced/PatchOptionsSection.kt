@@ -159,7 +159,7 @@ fun PatchOptionsSection(
                     }
                     IconButton(onClick = {
                         scope.launch {
-                            homeViewModel.updateMorpheBundleWithChangelogClear()
+                            homeViewModel.updateSilvaBundleWithChangelogClear()
                             patchOptionsViewModel.refresh()
                             context.toast(context.getString(R.string.home_updating_sources))
                         }
@@ -302,7 +302,7 @@ private fun AppPatchOptionsCard(
 
             // Custom Branding
             if (hasBranding) {
-                MorpheSettingsDivider()
+                SilvaSettingsDivider()
 
                 SettingsItem(
                     icon = Icons.Outlined.Style,
@@ -314,7 +314,7 @@ private fun AppPatchOptionsCard(
 
             // Custom Header (YouTube only)
             if (hasHeader && onHeaderClick != null) {
-                MorpheSettingsDivider()
+                SilvaSettingsDivider()
 
                 SettingsItem(
                     icon = Icons.Outlined.Image,
@@ -409,7 +409,7 @@ private fun HideShortsSection(
 
             // Hide Widget
             if (hasWidgetOption && widgetOption != null) {
-                MorpheSettingsDivider()
+                SilvaSettingsDivider()
 
                 val hideShortsWidget by patchOptionsPrefs.hideShortsWidget.getAsState()
                 val title = getLocalizedOrCustomText(

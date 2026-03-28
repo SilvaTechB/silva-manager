@@ -121,7 +121,7 @@ fun AdvancedTabContent(
             },
             showBorder = true,
             leadingContent = {
-                MorpheIcon(icon = Icons.Outlined.Psychology)
+                SilvaIcon(icon = Icons.Outlined.Psychology)
             },
             title = stringResource(R.string.settings_advanced_expert_mode),
             subtitle = stringResource(R.string.settings_advanced_expert_mode_description),
@@ -163,7 +163,7 @@ fun AdvancedTabContent(
                         },
                         showBorder = true,
                         leadingContent = {
-                            MorpheIcon(icon = Icons.Outlined.LayersClear)
+                            SilvaIcon(icon = Icons.Outlined.LayersClear)
                         },
                         title = stringResource(R.string.settings_advanced_strip_unused_libs),
                         subtitle = stringResource(R.string.settings_advanced_strip_unused_libs_description),
@@ -216,11 +216,11 @@ private fun ExpertModeConfirmationDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_advanced_expert_mode_dialog_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.enable),
                 onPrimaryClick = onConfirm,
                 isPrimaryDestructive = true,

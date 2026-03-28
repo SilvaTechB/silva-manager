@@ -42,11 +42,11 @@ fun CancelPatchingDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.patcher_stop_confirm_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.yes),
                 onPrimaryClick = onConfirm,
                 isPrimaryDestructive = true,
@@ -104,7 +104,7 @@ fun StoragePermissionDialog(
         }
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.patcher_storage_permission_dialog_title),
         footer = {
@@ -114,7 +114,7 @@ fun StoragePermissionDialog(
             ) {
                 if (isApi30Plus) {
                     // Android 11+ open the dedicated all-files-access settings screen
-                    MorpheDialogButton(
+                    SilvaDialogButton(
                         text = stringResource(R.string.patcher_storage_permission_open_settings),
                         onClick = {
                             // Open the per-app "Allow management of all files" system screen
@@ -133,7 +133,7 @@ fun StoragePermissionDialog(
                     )
                 } else {
                     // Android 10 and below request READ_EXTERNAL_STORAGE inline
-                    MorpheDialogButton(
+                    SilvaDialogButton(
                         text = stringResource(R.string.patcher_storage_permission_grant),
                         onClick = {
                             permissionDenied = false
@@ -144,7 +144,7 @@ fun StoragePermissionDialog(
                     )
                 }
 
-                MorpheDialogOutlinedButton(
+                SilvaDialogOutlinedButton(
                     text = stringResource(android.R.string.cancel),
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()

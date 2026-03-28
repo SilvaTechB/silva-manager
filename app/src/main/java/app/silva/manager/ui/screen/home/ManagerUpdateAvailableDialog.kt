@@ -53,7 +53,7 @@ fun ManagerUpdateDetailsDialog(
         }
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = { onDismiss() },
         title = stringResource(
             when (state) {
@@ -68,8 +68,8 @@ fun ManagerUpdateDetailsDialog(
         footer = {
             when (state) {
                 UpdateViewModel.State.CAN_DOWNLOAD -> {
-                    MorpheDialogButtonColumn {
-                        MorpheDialogButton(
+                    SilvaDialogButtonColumn {
+                        SilvaDialogButton(
                             text = stringResource(
                                 if (updateViewModel.canResumeDownload) R.string.resume_download
                                 else R.string.download
@@ -90,7 +90,7 @@ fun ManagerUpdateDetailsDialog(
                 }
 
                 UpdateViewModel.State.DOWNLOADING -> {
-                    MorpheDialogButton(
+                    SilvaDialogButton(
                         text = stringResource(R.string.close),
                         onClick = { onDismiss() },
                         modifier = Modifier.fillMaxWidth()
@@ -98,8 +98,8 @@ fun ManagerUpdateDetailsDialog(
                 }
 
                 UpdateViewModel.State.CAN_INSTALL -> {
-                    MorpheDialogButtonColumn {
-                        MorpheDialogButton(
+                    SilvaDialogButtonColumn {
+                        SilvaDialogButton(
                             text = stringResource(R.string.install),
                             onClick = { updateViewModel.installUpdate() },
                             icon = Icons.Outlined.InstallMobile,
@@ -122,10 +122,10 @@ fun ManagerUpdateDetailsDialog(
                 }
 
                 UpdateViewModel.State.FAILED -> {
-                    MorpheDialogButtonColumn {
+                    SilvaDialogButtonColumn {
                         if (updateViewModel.canResumeDownload) {
                             // Download failed/cancelled - offer to resume
-                            MorpheDialogButton(
+                            SilvaDialogButton(
                                 text = stringResource(R.string.resume_download),
                                 onClick = { updateViewModel.downloadUpdate() },
                                 icon = Icons.Outlined.Download,
@@ -133,7 +133,7 @@ fun ManagerUpdateDetailsDialog(
                             )
                         } else {
                             // Download completed but install failed - offer to retry install
-                            MorpheDialogButton(
+                            SilvaDialogButton(
                                 text = stringResource(R.string.install),
                                 onClick = { updateViewModel.installUpdate() },
                                 icon = Icons.Outlined.InstallMobile,
@@ -149,7 +149,7 @@ fun ManagerUpdateDetailsDialog(
                             )
                         }
 
-                        MorpheDialogOutlinedButton(
+                        SilvaDialogOutlinedButton(
                             text = stringResource(android.R.string.cancel),
                             onClick = onDismiss,
                             modifier = Modifier.fillMaxWidth()
@@ -158,7 +158,7 @@ fun ManagerUpdateDetailsDialog(
                 }
 
                 UpdateViewModel.State.SUCCESS -> {
-                    MorpheDialogButton(
+                    SilvaDialogButton(
                         text = stringResource(android.R.string.ok),
                         onClick = onDismiss,
                         modifier = Modifier.fillMaxWidth()
@@ -307,11 +307,11 @@ fun ManagerUpdateDetailsDialog(
 
     // Internet check dialog
     if (updateViewModel.showInternetCheckDialog) {
-        MorpheDialog(
+        SilvaDialog(
             onDismissRequest = { updateViewModel.showInternetCheckDialog = false },
             title = stringResource(R.string.download_update_confirmation),
             footer = {
-                MorpheDialogButtonRow(
+                SilvaDialogButtonRow(
                     primaryText = stringResource(R.string.download),
                     onPrimaryClick = {
                         updateViewModel.showInternetCheckDialog = false

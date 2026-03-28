@@ -632,8 +632,8 @@ class HomeViewModel(
         deepLinkPendingBundle = null
     }
 
-    suspend fun updateMorpheBundleWithChangelogClear() {
-        patchBundleRepository.updateOnlyMorpheBundle(
+    suspend fun updateSilvaBundleWithChangelogClear() {
+        patchBundleRepository.updateOnlySilvaBundle(
             force = false,
             showToast = false
         )

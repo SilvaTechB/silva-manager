@@ -27,7 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.silva.manager.BuildConfig
 import app.silva.manager.R
-import app.silva.manager.ui.screen.shared.MorpheSettingsDivider
+import app.silva.manager.ui.screen.shared.SilvaSettingsDivider
 import app.silva.manager.ui.screen.shared.RichSettingsItem
 import app.silva.manager.ui.screen.shared.SettingsItem
 import app.silva.manager.ui.viewmodel.UpdateViewModel
@@ -76,7 +76,7 @@ fun AboutSection(
             }
         )
 
-        MorpheSettingsDivider()
+        SilvaSettingsDivider()
 
         // Changelog item
         SettingsItem(
@@ -92,7 +92,7 @@ fun AboutSection(
             }
         )
 
-        MorpheSettingsDivider()
+        SilvaSettingsDivider()
 
         // Share Website item
         SettingsItem(

@@ -111,7 +111,7 @@ fun AppearanceTabContent(
                 title = stringResource(R.string.settings_appearance_pure_black),
                 subtitle = stringResource(R.string.settings_appearance_pure_black_description),
                 leadingContent = {
-                    MorpheIcon(icon = Icons.Outlined.Contrast)
+                    SilvaIcon(icon = Icons.Outlined.Contrast)
                 },
                 trailingContent = {
                     Switch(
@@ -168,7 +168,7 @@ fun AppearanceTabContent(
                 title = stringResource(R.string.settings_appearance_parallax_effect),
                 subtitle = stringResource(R.string.settings_appearance_parallax_effect_description),
                 leadingContent = {
-                    MorpheIcon(icon = Icons.Outlined.ScreenRotation)
+                    SilvaIcon(icon = Icons.Outlined.ScreenRotation)
                 },
                 trailingContent = {
                     Switch(
@@ -197,7 +197,7 @@ fun AppearanceTabContent(
         enter = fadeIn(animationSpec = tween(300)),
         exit = fadeOut(animationSpec = tween(if (showLanguageDialog) 0 else 200))
     ) {
-        MorpheDialogWithLinks(
+        SilvaDialogWithLinks(
             title = stringResource(R.string.settings_appearance_translations_info_title),
             message = stringResource(
                 R.string.settings_appearance_translations_info_text,
@@ -277,7 +277,7 @@ private fun LanguageSection(
             }
         },
         trailingContent = {
-            MorpheIcon(icon = Icons.Outlined.ChevronRight)
+            SilvaIcon(icon = Icons.Outlined.ChevronRight)
         }
     )
 }

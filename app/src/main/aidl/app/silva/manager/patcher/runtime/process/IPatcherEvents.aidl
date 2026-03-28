@@ -1,4 +1,4 @@
-package app.morphe.manager.patcher.runtime.process;
+package app.silva.manager.patcher.runtime.process;
 
 // Interface for sending events back to the main app process.
 oneway interface IPatcherEvents {

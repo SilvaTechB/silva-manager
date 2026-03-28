@@ -34,11 +34,11 @@ fun ChangelogDialog(
         updateViewModel.loadCurrentVersionChangelog()
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.changelog),
         footer = {
-            MorpheDialogButtonColumn {
+            SilvaDialogButtonColumn {
                 ChangelogButton(
                     pageUrl = entry?.version?.let {
                         val tag = if (it.startsWith("v")) it else "v$it"
@@ -46,7 +46,7 @@ fun ChangelogDialog(
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
-                MorpheDialogButton(
+                SilvaDialogButton(
                     text = stringResource(android.R.string.ok),
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()

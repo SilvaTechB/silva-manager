@@ -284,11 +284,11 @@ private fun ApkManagementDialogContent(
     items: List<ApkItemData>,
     onDelete: (Int) -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismissRequest,
         title = title,
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(R.string.close),
                 onClick = onDismissRequest,
                 modifier = Modifier.fillMaxWidth()
@@ -417,11 +417,11 @@ private fun DeleteConfirmationDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = title,
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.delete),
                 onPrimaryClick = onConfirm,
                 isPrimaryDestructive = true,

@@ -180,7 +180,7 @@ private fun PatchSelectionManagementDialogContent(
     onShowPatchDetails: (PatchDetailsTarget) -> Unit,
     appDataResolver: AppDataResolver
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_system_patch_selections_title),
         titleTrailingContent = if (selections.isNotEmpty()) {
@@ -197,7 +197,7 @@ private fun PatchSelectionManagementDialogContent(
             null
         },
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(R.string.close),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
@@ -404,10 +404,10 @@ private fun PackageSelectionItem(
                         )
                     }
 
-                    MorpheSettingsDivider(fullWidth = true)
+                    SilvaSettingsDivider(fullWidth = true)
 
                     // Reset all for this package
-                    MorpheDialogButton(
+                    SilvaDialogButton(
                         text = stringResource(R.string.reset_all),
                         onClick = onResetPackage,
                         isDestructive = true,
@@ -469,7 +469,7 @@ private fun BundleSelectionItem(
             .padding(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        MorpheSettingsDivider(fullWidth = true)
+        SilvaSettingsDivider(fullWidth = true)
 
         // Bundle info card
         Surface(
@@ -581,11 +581,11 @@ private fun ConfirmResetAllDialog(
         }
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_system_patch_selection_reset_all_confirm_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.reset_all),
                 onPrimaryClick = onConfirm,
                 secondaryText = stringResource(android.R.string.cancel),
@@ -668,11 +668,11 @@ private fun ConfirmResetPackageDialog(
         }
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_system_patch_selection_reset_package_confirm_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.reset),
                 onPrimaryClick = onConfirm,
                 secondaryText = stringResource(android.R.string.cancel),
@@ -758,11 +758,11 @@ private fun ConfirmResetPackageBundleDialog(
         }
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_system_patch_selection_reset_source_confirm_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.reset),
                 onPrimaryClick = onConfirm,
                 secondaryText = stringResource(android.R.string.cancel),
@@ -883,11 +883,11 @@ private fun PatchDetailsDialog(
 
     val bundleDisplayName = bundleName ?: "Source"
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_system_patch_details_title),
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(R.string.close),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()

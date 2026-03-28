@@ -155,7 +155,7 @@ fun ExpertModeDialog(
         onProceed()
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.expert_mode_title),
         titleTrailingContent = {
@@ -211,7 +211,7 @@ fun ExpertModeDialog(
                 enter = expandVertically(animationSpec = tween(250)) + fadeIn(tween(250)),
                 exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(tween(200))
             ) {
-                MorpheDialogTextField(
+                SilvaDialogTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     label = {
@@ -422,7 +422,7 @@ fun ExpertModeDialog(
             }
 
             // Proceed to Patching button
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(R.string.expert_mode_proceed),
                 onClick = {
                     // Check if multiple bundles are selected
@@ -823,7 +823,7 @@ private fun PatchOptionsDialog(
 
     var showColorPicker by remember { mutableStateOf<Pair<String, String>?>(null) }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = patch.name,
         titleTrailingContent = {
@@ -836,7 +836,7 @@ private fun PatchOptionsDialog(
             }
         },
         footer = {
-            MorpheDialogButton(
+            SilvaDialogButton(
                 text = stringResource(R.string.close),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
@@ -1156,7 +1156,7 @@ private fun PathInputOption(
             onValueChange(uri.toFilePath())
         }
 
-        MorpheDialogTextField(
+        SilvaDialogTextField(
             value = value,
             onValueChange = onValueChange,
             label = {
@@ -1171,7 +1171,7 @@ private fun PathInputOption(
 
         // Create Icon button (only for the default Morphe bundle)
         if (isIconField && isDefaultBundle) {
-            MorpheDialogOutlinedButton(
+            SilvaDialogOutlinedButton(
                 text = stringResource(R.string.adaptive_icon_create),
                 onClick = { showIconCreator = true },
                 icon = Icons.Outlined.AutoAwesome,
@@ -1181,7 +1181,7 @@ private fun PathInputOption(
 
         // Create Header button (only for the default Morphe bundle)
         if (isHeaderField && isDefaultBundle) {
-            MorpheDialogOutlinedButton(
+            SilvaDialogOutlinedButton(
                 text = stringResource(R.string.header_creator_create),
                 onClick = { showHeaderCreator = true },
                 icon = Icons.Outlined.Image,
@@ -1284,7 +1284,7 @@ private fun PathWithPresetsOption(
         }
 
         // Dropdown TextField with folder picker and clear button
-        MorpheDialogDropdownTextField(
+        SilvaDialogDropdownTextField(
             value = value,
             onValueChange = onValueChange,
             dropdownItems = dropdownItems,
@@ -1297,7 +1297,7 @@ private fun PathWithPresetsOption(
 
         // Create Icon button (only for the default Morphe bundle)
         if (isIconField && isDefaultBundle) {
-            MorpheDialogOutlinedButton(
+            SilvaDialogOutlinedButton(
                 text = stringResource(R.string.adaptive_icon_create),
                 onClick = { showIconCreator = true },
                 icon = Icons.Outlined.AutoAwesome,
@@ -1307,7 +1307,7 @@ private fun PathWithPresetsOption(
 
         // Create Header button (only for the default Morphe bundle)
         if (isHeaderField && isDefaultBundle) {
-            MorpheDialogOutlinedButton(
+            SilvaDialogOutlinedButton(
                 text = stringResource(R.string.header_creator_create),
                 onClick = { showHeaderCreator = true },
                 icon = Icons.Outlined.Image,
@@ -1385,7 +1385,7 @@ private fun TextInputOption(
 //            }
 //        }
 
-        MorpheDialogTextField(
+        SilvaDialogTextField(
             value = value,
             onValueChange = onValueChange,
             label = {
@@ -1551,12 +1551,12 @@ private fun ListStringEditorDialog(
         inputError = false
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = title,
         dismissOnClickOutside = false,
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.save),
                 onPrimaryClick = { onConfirm(items.toList()) },
                 secondaryText = stringResource(android.R.string.cancel),
@@ -1583,7 +1583,7 @@ private fun ListStringEditorDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                MorpheDialogTextField(
+                SilvaDialogTextField(
                     value = inputText,
                     onValueChange = {
                         inputText = it
@@ -1726,7 +1726,7 @@ private fun DropdownOptionItem(
             }
         }
 
-        MorpheDialogDropdownTextField(
+        SilvaDialogDropdownTextField(
             value = value,
             onValueChange = { newValue ->
                 // Try to find the actual value from presets by matching the string representation
@@ -1838,7 +1838,7 @@ fun ScrollableInstruction(
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            MorpheSettingsDivider(fullWidth = true)
+            SilvaSettingsDivider(fullWidth = true)
 
             Text(
                 text = description,
@@ -1880,11 +1880,11 @@ private fun MultipleSourcesWarningDialog(
     onDismiss: () -> Unit,
     onProceed: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.expert_mode_multiple_sources_warning_title),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.home_dialog_unsupported_version_dialog_proceed),
                 onPrimaryClick = onProceed,
                 secondaryText = stringResource(android.R.string.cancel),

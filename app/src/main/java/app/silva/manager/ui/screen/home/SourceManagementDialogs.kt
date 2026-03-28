@@ -66,11 +66,11 @@ fun AddSourceDialog(
     val isRemoteValid = remoteUrl.isNotBlank()
     val isLocalValid = selectedLocalPath != null
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.sources_dialog_add_source),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.add),
                 onPrimaryClick = {
                     when (selectedTab) {
@@ -173,7 +173,7 @@ private fun RemoteTabContent(
     ) {
         // URL input
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            MorpheDialogTextField(
+            SilvaDialogTextField(
                 value = remoteUrl,
                 onValueChange = onUrlChange,
                 label = {
@@ -206,7 +206,7 @@ private fun LocalTabContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // File picker button
-        MorpheDialogButton(
+        SilvaDialogButton(
             text = if (selectedPath == null) {
                 stringResource(R.string.sources_dialog_local_file)
             } else {
@@ -241,11 +241,11 @@ fun BundleDeleteConfirmDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.delete),
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(R.string.delete),
                 onPrimaryClick = onConfirm,
                 isPrimaryDestructive = true,
@@ -280,12 +280,12 @@ fun RenameBundleDialog(
     var textValue by remember { mutableStateOf(initialValue) }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(R.string.sources_dialog_display_name),
         dismissOnClickOutside = false,
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(android.R.string.ok),
                 onPrimaryClick = {
                     keyboardController?.hide()
@@ -313,7 +313,7 @@ fun RenameBundleDialog(
                 textAlign = TextAlign.Center
             )
 
-            MorpheDialogTextField(
+            SilvaDialogTextField(
                 value = textValue,
                 onValueChange = { textValue = it },
                 placeholder = {
@@ -357,11 +357,11 @@ fun BundlePatchesDialog(
 
     val isLoading = patches.isEmpty()
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismissRequest,
         title = null,
         footer = {
-            MorpheDialogButtonRow(
+            SilvaDialogButtonRow(
                 primaryText = stringResource(android.R.string.ok),
                 onPrimaryClick = onDismissRequest
             )
@@ -750,7 +750,7 @@ fun BundleChangelogDialog(
         }
     }
 
-    MorpheDialog(
+    SilvaDialog(
         onDismissRequest = onDismissRequest,
         title = when (state) {
             is BundleChangelogState.Entries -> null
@@ -760,14 +760,14 @@ fun BundleChangelogDialog(
         footer = {
             when (val current = state) {
                 is BundleChangelogState.Entries -> {
-                    MorpheDialogButtonColumn {
+                    SilvaDialogButtonColumn {
                         current.latestPageUrl?.let { url ->
                             ChangelogButton(
                                 pageUrl = url,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        MorpheDialogButton(
+                        SilvaDialogButton(
                             text = stringResource(android.R.string.ok),
                             onClick = onDismissRequest,
                             modifier = Modifier.fillMaxWidth()
@@ -775,13 +775,13 @@ fun BundleChangelogDialog(
                     }
                 }
                 is BundleChangelogState.Error -> {
-                    MorpheDialogButtonColumn {
-                        MorpheDialogButton(
+                    SilvaDialogButtonColumn {
+                        SilvaDialogButton(
                             text = stringResource(R.string.changelog_retry),
                             onClick = { state = BundleChangelogState.Loading },
                             modifier = Modifier.fillMaxWidth()
                         )
-                        MorpheDialogButton(
+                        SilvaDialogButton(
                             text = stringResource(android.R.string.ok),
                             onClick = onDismissRequest,
                             modifier = Modifier.fillMaxWidth()
@@ -789,7 +789,7 @@ fun BundleChangelogDialog(
                     }
                 }
                 BundleChangelogState.Loading -> {
-                    MorpheDialogButton(
+                    SilvaDialogButton(
                         text = stringResource(android.R.string.ok),
                         onClick = onDismissRequest,
                         modifier = Modifier.fillMaxWidth()

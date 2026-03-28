@@ -26,7 +26,7 @@ export TMPDIR=$WORK_TMPDIR
 export TMP=$WORK_TMPDIR
 export TEMP=$WORK_TMPDIR
 
-APP_VERSION="1.12.6"
+APP_VERSION="1.12.7"
 
 echo "=== Silva Manager Build v$APP_VERSION ==="
 echo "Android SDK: $ANDROID_HOME"

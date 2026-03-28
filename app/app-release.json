@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-03-28T18:02:07.000Z",
-  "description": "## app [1.12.3](https://github.com/SilvaTechB/silva-manager/compare/v1.12.2...v1.12.3) (2026-03-28)\n\n\n### Bug Fixes\n\n* Fix APK auto-update to point to SilvaTechB/silva-manager releases\n* Fix patches fallback API to use silva-patches GitHub releases instead of defunct Morphe API",
-  "download_url": "https://github.com/SilvaTechB/silva-manager/releases/download/v1.12.3/silva-manager-1.12.3.apk",
+  "created_at": "2026-03-28T18:42:00.000Z",
+  "description": "## app [1.12.4](https://github.com/SilvaTechB/silva-manager/compare/v1.12.3...v1.12.4) (2026-03-28)\n\n\n### Bug Fixes\n\n* Fix \"Sources are loading\" error — patch bundle validation now accepts JVM class file format used by silva-patches v1.21.1\n* YouTube, YouTube Music and all other app patches now load correctly",
+  "download_url": "https://github.com/SilvaTechB/silva-manager/releases/download/v1.12.4/silva-manager-1.12.4.apk",
   "signature_download_url": "",
-  "version": "1.12.3"
+  "version": "1.12.4"
 }

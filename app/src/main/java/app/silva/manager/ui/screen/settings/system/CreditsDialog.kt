@@ -1,6 +1,6 @@
 /*
- * Copyright 2026 Morphe.
- * https://github.com/MorpheApp/silva-manager
+ * Copyright 2026 Silva Tech.
+ * https://github.com/SilvaTechB/silva-manager
  */
 
 package app.silva.manager.ui.screen.settings.system
@@ -30,8 +30,8 @@ private data class Contributor(
 
 private val currentContributors = listOf(
     Contributor(
-        name = "Morphe",
-        url = "https://github.com/MorpheApp/silva-manager/graphs/contributors"
+        name = "Silva Tech",
+        url = "https://github.com/SilvaTechB/silva-manager/graphs/contributors"
     )
 )
 

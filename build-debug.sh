@@ -26,13 +26,23 @@ export TMPDIR=$WORK_TMPDIR
 export TMP=$WORK_TMPDIR
 export TEMP=$WORK_TMPDIR
 
-echo "=== Silva Manager Build ==="
+APP_VERSION="1.12.3"
+
+echo "=== Silva Manager Build v$APP_VERSION ==="
 echo "Android SDK: $ANDROID_HOME"
 echo "Java: $(java -version 2>&1 | head -1)"
 echo "Temp dir: $WORK_TMPDIR"
 echo ""
 
-./gradlew --no-daemon assembleDebug
+./gradlew --no-daemon -Pversion=$APP_VERSION assembleDebug
+
+# Rename APK to include version
+APK_SRC=$(find app/build/outputs/apk/debug/ -name "*.apk" 2>/dev/null | head -1)
+APK_DEST="app/build/outputs/apk/debug/silva-manager-${APP_VERSION}.apk"
+
+if [ -n "$APK_SRC" ] && [ "$APK_SRC" != "$APK_DEST" ]; then
+    mv "$APK_SRC" "$APK_DEST"
+fi
 
 echo ""
 echo "=== Build complete! APK location: ==="

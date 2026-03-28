@@ -55,6 +55,10 @@ dependencyResolutionManagement {
                 password = System.getenv("GITHUB_TOKEN")
                     ?: providers.gradleProperty("gpr.key").orNull
             }
+            metadataSources {
+                mavenPom()
+                artifact()
+            }
         }
     }
 }

@@ -18,11 +18,11 @@ class KeystoreManager(app: Application, private val prefs: PreferencesManager) {
         /**
          * Default alias and password for the keystore.
          */
-        const val DEFAULT = "Morphe"
+        const val DEFAULT = "Silva"
     }
 
     private val keystorePath =
-        app.getDir("signing", Context.MODE_PRIVATE).resolve("morphe.keystore")
+        app.getDir("signing", Context.MODE_PRIVATE).resolve("silva.keystore")
 
     private suspend fun updatePrefs(alias: String, pass: String) = prefs.edit {
         prefs.keystoreAlias.value = alias

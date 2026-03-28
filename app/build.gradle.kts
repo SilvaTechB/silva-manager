@@ -60,7 +60,9 @@ dependencies {
 
     // Silva
     implementation(libs.arsclib)
-    implementation(libs.silva.patcher)
+    implementation(libs.silva.patcher) {
+        exclude(group = "app.silva", module = "silva-library-jvm")
+    }
     implementation(files("libs/silva-library-android-1.3.0.aar"))
 
     // Exclude xmlpull as it's included in Android already

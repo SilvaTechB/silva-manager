@@ -64,7 +64,7 @@ val rv_theme_dark_surfaceTint          = Color(0xFF00D9FF)
 val rv_theme_dark_outlineVariant       = Color(0xFF1C2840)
 val rv_theme_dark_scrim                = Color(0xFF000000)
 
-// ── Nexus accent constants (used in custom UI draws) ─────────────────────────
+// Accent constants used in custom UI draws
 val NexusCyan   = Color(0xFF00D9FF)
 val NexusGlow   = Color(0xFF00AACC)
 val NexusDark   = Color(0xFF0B0F17)

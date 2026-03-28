@@ -634,7 +634,7 @@ fun GreetingSection(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        // ── Nexus brand pill ────────────────────────────────────────────────
+        // Brand pill
         val pillShape = RoundedCornerShape(50)
         Box(
             modifier = Modifier
@@ -676,7 +676,7 @@ fun GreetingSection(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // ── Animated greeting heading ───────────────────────────────────────
+        // Animated greeting heading
         Box(contentAlignment = Alignment.Center) {
             AnimatedContent(
                 targetState = message,

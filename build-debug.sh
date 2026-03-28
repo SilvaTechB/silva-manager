@@ -16,7 +16,7 @@ export TMPDIR=$WORK_TMPDIR
 export TMP=$WORK_TMPDIR
 export TEMP=$WORK_TMPDIR
 
-echo "=== Morphe Manager Build ==="
+echo "=== Silva Manager Build ==="
 echo "Android SDK: $ANDROID_HOME"
 echo "Java: $(java -version 2>&1 | head -1)"
 echo "Temp dir: $WORK_TMPDIR"

@@ -615,27 +615,42 @@ private fun BundleUpdateSnackbarContent(
 fun GreetingSection(
     message: String
 ) {
-    Box(contentAlignment = Alignment.Center) {
-        AnimatedContent(
-            targetState = message,
-            transitionSpec = {
-                (fadeIn(animationSpec = tween(400)) +
-                        slideInVertically(animationSpec = tween(400)) { it / 4 })
-                    .togetherWith(
-                        fadeOut(animationSpec = tween(200)) +
-                                slideOutVertically(animationSpec = tween(200)) { -it / 4 }
-                    )
-            },
-            label = "greeting_transition"
-        ) { targetMessage ->
-            Text(
-                text = targetMessage,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.fillMaxWidth()
-            )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = stringResource(R.string.app_landing_title),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.primary,
+            letterSpacing = 1.5.sp,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Box(contentAlignment = Alignment.Center) {
+            AnimatedContent(
+                targetState = message,
+                transitionSpec = {
+                    (fadeIn(animationSpec = tween(400)) +
+                            slideInVertically(animationSpec = tween(400)) { it / 4 })
+                        .togetherWith(
+                            fadeOut(animationSpec = tween(200)) +
+                                    slideOutVertically(animationSpec = tween(200)) { -it / 4 }
+                        )
+                },
+                label = "greeting_transition"
+            ) { targetMessage ->
+                Text(
+                    text = targetMessage,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

@@ -145,7 +145,7 @@ class RootInstaller(
 
                     val updatedContent = content
                         .replace("$packageName-revanced", "$packageName-silva")
-                        .replace("ReVanced", "Morphe") // Update display name if present
+                        .replace("ReVanced", "Silva") // Update display name if present
 
                     modulePropFile.newOutputStream().use {
                         it.write(updatedContent.toByteArray())

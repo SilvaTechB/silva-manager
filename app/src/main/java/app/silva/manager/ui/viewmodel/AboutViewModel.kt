@@ -23,29 +23,17 @@ class AboutViewModel() : ViewModel() {
         val socials: List<SocialLink> = listOf(
             SocialLink(
                 name = "Website",
-                url = "https://morphe.software",
+                url = "https://silvatech.co.ke",
                 preferred = true
             ),
             SocialLink(
-                name = "Changelog",
-                url = "https://morphe.software/changelog"
-            ),
-            SocialLink(
                 name = "GitHub",
-                url = "https://github.com/MorpheApp"
+                url = "https://github.com/SilvaTechB"
             ),
             SocialLink(
                 name = "X",
-                url = "https://x.com/MorpheApp"
+                url = "https://x.com/SilvaTechB"
             ),
-            SocialLink(
-                name = "Reddit",
-                url = "https://reddit.com/r/MorpheApp"
-            ),
-            SocialLink(
-                name = "Crowdin",
-                url = "https://morphe.software/translate"
-            )
         )
 
         private val socialIcons = mapOf(

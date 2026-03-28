@@ -1,4 +1,7 @@
 <resources>
+    <!-- App landing title -->
+    <string name="app_landing_title" translatable="false">SILVA TECH PATCHING</string>
+
     <!-- Home Screen -->
     <string name="home_other_apps">Other apps</string>
     <string name="home_not_patched_yet">Not patched yet</string>
@@ -283,7 +286,7 @@ Are you sure you want to proceed?"</string>
     <string name="patcher_stop_confirm_description">Are you sure you want to stop the patching process?</string>
 
     <!-- Patcher Screen - Patcher Messages -->
-    <string name="patcher_message_1">Morphing your app into something awesome… 🏆</string>
+    <string name="patcher_message_1">Silva is patching your app into something awesome… 🏆</string>
     <string name="patcher_message_2">Teaching old apps new tricks… 🎩</string>
     <string name="patcher_message_3">Giving your app a digital tune-up… 🔧</string>
     <string name="patcher_message_4">Brewing digital magic… ☕</string>

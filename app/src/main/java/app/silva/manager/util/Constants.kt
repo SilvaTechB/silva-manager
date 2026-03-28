@@ -1,6 +1,6 @@
 /*
- * Copyright 2026 Morphe.
- * https://github.com/MorpheApp/silva-manager
+ * Copyright 2026 Silva Tech.
+ * https://github.com/SilvaTechB/silva-manager
  */
 
 package app.silva.manager.util
@@ -8,11 +8,11 @@ package app.silva.manager.util
 import android.content.Context
 import androidx.compose.ui.graphics.Color
 
-const val tag = "Morphe Manager"
+const val tag = "Silva Manager"
 
-const val SOURCE_NAME = "Morphe Patches"
-const val MANAGER_REPO_URL = "https://github.com/MorpheApp/silva-manager"
-const val SOURCE_REPO_URL = "https://github.com/MorpheApp/morphe-patches"
+const val SOURCE_NAME = "Silva Patches"
+const val MANAGER_REPO_URL = "https://github.com/SilvaTechB/silva-manager"
+const val SOURCE_REPO_URL = "https://github.com/SilvaTechB/silva-patches"
 const val MORPHE_API_URL = "https://api.morphe.software"
 
 /**
@@ -22,15 +22,15 @@ const val MORPHE_API_URL = "https://api.morphe.software"
 const val MANAGER_UPDATE_SHOW_DELAY_SECONDS = 300L
 
 /** Raw GitHub URL for the stable manager release JSON (main branch) */
-const val MANAGER_RELEASE_JSON_URL = "https://raw.githubusercontent.com/MorpheApp/silva-manager/refs/heads/main/app/app-release.json"
+const val MANAGER_RELEASE_JSON_URL = "https://raw.githubusercontent.com/SilvaTechB/silva-manager/refs/heads/main/app/app-release.json"
 
 /** Raw GitHub URL for the pre-release manager release JSON (dev branch) */
-const val MANAGER_PRERELEASE_JSON_URL = "https://raw.githubusercontent.com/MorpheApp/silva-manager/refs/heads/dev/app/app-release.json"
+const val MANAGER_PRERELEASE_JSON_URL = "https://raw.githubusercontent.com/SilvaTechB/silva-manager/refs/heads/dev/app/app-release.json"
 
 /** Controls whether manager updates are fetched directly from JSON files in the repository instead of using the GitHub API */
 const val USE_MANAGER_DIRECT_JSON = true
 
-/** Controls whether patches are fetched directly from JSON files in the repository instead of using the Morphe API */
+/** Controls whether patches are fetched directly from JSON files in the repository instead of using the Silva API */
 const val USE_PATCHES_DIRECT_JSON = true
 
 /**
@@ -42,7 +42,7 @@ object KnownApps {
     const val REDDIT        = "com.reddit.frontpage"
     const val X_TWITTER     = "com.twitter.android"
 
-    // Shared Morphe brand gradient tail
+    // Shared Silva brand gradient tail
     val GRADIENT_MID = Color(0xFF1E5AA8)
     val GRADIENT_END = Color(0xFF00AFAE)
 
@@ -155,17 +155,6 @@ val APK_FILE_MIME_TYPES = arrayOf(
     // end user will know or should have to do. Instead, show all files to ensure the user can
     // always select no matter what file naming ApkMirror uses.
     "application/*",
-//    "application/zip",
-//    "application/x-zip-compressed",
-//    "application/x-apkm",
-//    "application/x-apks",
-//    "application/x-xapk",
-//    "application/xapk",
-//    "application/vnd.android.xapk",
-//    "application/vnd.android.apkm",
-//    "application/apkm",
-//    "application/vnd.android.apks",
-//    "application/apks",
 )
 val APK_FILE_EXTENSIONS = setOf(
     "apk",
@@ -177,6 +166,5 @@ val APK_FILE_EXTENSIONS = setOf(
 
 val MPP_FILE_MIME_TYPES = arrayOf(
     BIN_MIMETYPE,
-//    "application/x-zip-compressed"
     "*/*"
 )

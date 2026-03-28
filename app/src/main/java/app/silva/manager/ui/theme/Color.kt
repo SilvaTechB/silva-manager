@@ -2,7 +2,7 @@ package app.silva.manager.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ── Silva Tech Nexus · Light palette ──────────────────────────────────────────
+// Light palette
 val rv_theme_light_primary              = Color(0xFF006B8F)
 val rv_theme_light_onPrimary            = Color(0xFFFFFFFF)
 val rv_theme_light_primaryContainer     = Color(0xFFB3E8FF)
@@ -33,7 +33,7 @@ val rv_theme_light_surfaceTint          = Color(0xFF006B8F)
 val rv_theme_light_outlineVariant       = Color(0xFFBDD4E4)
 val rv_theme_light_scrim                = Color(0xFF000000)
 
-// ── Silva Tech Nexus · Dark palette ───────────────────────────────────────────
+// Dark palette
 val rv_theme_dark_primary              = Color(0xFF00D9FF)   // electric neon cyan
 val rv_theme_dark_onPrimary            = Color(0xFF00222E)
 val rv_theme_dark_primaryContainer     = Color(0xFF004560)

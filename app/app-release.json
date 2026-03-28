@@ -1,7 +1,7 @@
 {
   "created_at": "2026-03-28T22:00:00.000Z",
-  "description": "## app [1.12.5](https://github.com/SilvaTechB/silva-manager/compare/v1.12.4...v1.12.5) (2026-03-28)\n\n\n### Bug Fixes\n\n* Fix changelog URL derivation referencing wrong repository (SilvaApp/morphe-patches → SilvaTechB/silva-patches)\n\n### Improvements\n\n* Home screen brand label now displayed in a polished pill badge\n* App cards updated with deeper frosted glass gradients and stronger border contrast\n* \"Other apps\" button redesigned with glassmorphism gradient border and Apps icon\n* Bottom action bar buttons now display text labels alongside icons for improved clarity",
-  "download_url": "https://github.com/SilvaTechB/silva-manager/releases/download/v1.12.5/silva-manager-1.12.5.apk",
+  "description": "## app [1.12.6](https://github.com/SilvaTechB/silva-manager/compare/v1.12.5...v1.12.6) (2026-03-28)\n\n\n### Improvements\n\n* Silva Tech Nexus UI: deep space dark palette with electric cyan accents\n* Animated neon pulsing pill border in greeting section\n* Neon cyan card borders and bottom bar glow\n* Library rebrand: app.morphe \u2192 app.silva (silva-patcher/silva-library v1.3.3)\n* Registry updated to SilvaTechB/silva-patcher",
+  "download_url": "https://github.com/SilvaTechB/silva-manager/releases/download/v1.12.6/silva-manager-1.12.6.apk",
   "signature_download_url": "",
-  "version": "1.12.5"
+  "version": "1.12.6"
 }

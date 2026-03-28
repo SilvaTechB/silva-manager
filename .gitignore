@@ -1,6 +1,9 @@
 # Android SDK (local only, not committed to repo)
 android-sdk/
 
+# Attached assets (raw pastes / debug logs, not product source)
+attached_assets/Pasted-*.txt
+
 # Build outputs
 /build/
 app/build/

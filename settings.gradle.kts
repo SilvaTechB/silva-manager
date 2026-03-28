@@ -47,6 +47,15 @@ dependencyResolutionManagement {
                 password = (if (hardcodedToken.isNotBlank()) hardcodedToken else System.getenv("GITHUB_TOKEN") ?: gprKey)
             }
         }
+        maven {
+            url = uri("https://maven.pkg.github.com/SilvaTechB/silva-library")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                    ?: providers.gradleProperty("gpr.user").orNull
+                password = System.getenv("GITHUB_TOKEN")
+                    ?: providers.gradleProperty("gpr.key").orNull
+            }
+        }
     }
 }
 

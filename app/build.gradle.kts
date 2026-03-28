@@ -61,7 +61,7 @@ dependencies {
     // Silva
     implementation(libs.arsclib)
     implementation(libs.silva.patcher)
-    implementation(libs.silva.library)
+    implementation(libs.silva.library.android)
 
     // Exclude xmlpull as it's included in Android already
     configurations.configureEach {

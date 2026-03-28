@@ -1,0 +1,561 @@
+package app.silva.manager.network.api
+
+import android.util.Log
+import app.silva.manager.BuildConfig
+import app.silva.manager.domain.manager.PreferencesManager
+import app.silva.manager.network.dto.*
+import app.silva.manager.network.service.HttpService
+import app.silva.manager.network.utils.APIFailure
+import app.silva.manager.network.utils.APIResponse
+import app.silva.manager.network.utils.getOrNull
+import app.silva.manager.util.*
+import io.ktor.client.request.header
+import io.ktor.client.request.url
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
+class SilvaAPI(
+    private val client: HttpService,
+    private val prefs: PreferencesManager
+) {
+    // ============================================================================
+    // REGION: Data Models
+    // ============================================================================
+
+    private data class RepoConfig(
+        val owner: String,
+        val name: String,
+        val apiBase: String,
+        val htmlUrl: String,
+    ) {
+        fun rawFileUrl(branch: String, path: String): String =
+            "https://raw.githubusercontent.com/$owner/$name/$branch/$path"
+    }
+
+    // ============================================================================
+    // REGION: Repository Configuration
+    // ============================================================================
+
+    private val managerConfig: RepoConfig by lazy { parseRepoUrl(MANAGER_REPO_URL) }
+    private val patchesConfig: RepoConfig by lazy { parseRepoUrl(SOURCE_REPO_URL) }
+
+    private fun parseRepoUrl(repoUrl: String): RepoConfig {
+        val trimmed = repoUrl.removeSuffix("/")
+
+        return when {
+            trimmed.startsWith("https://github.com/") -> parseGitHubUrl(trimmed, repoUrl)
+            trimmed.startsWith("https://api.github.com/") -> parseGitHubApiUrl(trimmed, repoUrl)
+            else -> throw IllegalArgumentException("Unsupported repository URL: $repoUrl")
+        }
+    }
+
+    private fun parseGitHubUrl(url: String, originalUrl: String): RepoConfig {
+        val repoPath = url.removePrefix("https://github.com/").removeSuffix(".git")
+        val parts = repoPath.split("/").filter { it.isNotBlank() }
+        require(parts.size >= 2) { "Invalid GitHub repository URL: $originalUrl" }
+
+        val owner = parts[0]
+        val name = parts[1]
+
+        return RepoConfig(
+            owner = owner,
+            name = name,
+            apiBase = "https://api.github.com/repos/$owner/$name",
+            htmlUrl = "https://github.com/$owner/$name"
+        )
+    }
+
+    private fun parseGitHubApiUrl(url: String, originalUrl: String): RepoConfig {
+        val repoPath = url.removePrefix("https://api.github.com/").trim('/').removeSuffix(".git")
+        val parts = repoPath.split("/").filter { it.isNotBlank() }
+        val reposIndex = parts.indexOf("repos")
+
+        val owner = parts.getOrNull(reposIndex + 1)
+            ?: throw IllegalArgumentException("Invalid GitHub API URL: $originalUrl")
+        val name = parts.getOrNull(reposIndex + 2)
+            ?: throw IllegalArgumentException("Invalid GitHub API URL: $originalUrl")
+
+        return RepoConfig(
+            owner = owner,
+            name = name,
+            apiBase = "https://api.github.com/repos/$owner/$name",
+            htmlUrl = "https://github.com/$owner/$name"
+        )
+    }
+
+    // ============================================================================
+    // REGION: HTTP Request Helpers
+    // ============================================================================
+
+    private suspend inline fun <reified T> githubRequest(
+        config: RepoConfig,
+        path: String
+    ): APIResponse<T> {
+        val normalizedPath = path.trimStart('/')
+        val pat = prefs.gitHubPat.get()
+
+        return client.request {
+            pat.takeIf { it.isNotBlank() }?.let { header("Authorization", "Bearer $it") }
+            url("${config.apiBase}/$normalizedPath")
+        }
+    }
+
+    private suspend inline fun <reified T> apiRequest(route: String): APIResponse<T> {
+        val normalizedRoute = route.trimStart('/')
+        val urlString = "$MORPHE_API_URL/v2/$normalizedRoute"
+        return client.runWithRetry(route) {
+            client.request {
+                url(urlString)
+            }
+        }
+    }
+
+    private suspend inline fun <reified T> rawFileRequest(
+        config: RepoConfig,
+        branch: String,
+        path: String
+    ): APIResponse<T> {
+        val url = config.rawFileUrl(branch, path)
+        Log.d(tag, "Fetching from raw file: $url")
+
+        return client.request {
+            url(url)
+        }
+    }
+
+    // ============================================================================
+    // REGION: Asset Mapping & Utilities
+    // ============================================================================
+
+    private fun mapReleaseToAsset(
+        config: RepoConfig,
+        release: GitHubRelease,
+        asset: GitHubAsset
+    ): SilvaAsset {
+        val timestamp = release.publishedAt ?: release.createdAt
+        require(timestamp != null) { "Release ${release.tagName} does not contain a timestamp" }
+
+        val createdAt = parseTimestamp(timestamp)
+        val signatureUrl = findSignatureUrl(release, asset)
+        val description = release.body?.ifBlank { release.name.orEmpty() } ?: release.name.orEmpty()
+
+        return SilvaAsset(
+            downloadUrl = asset.downloadUrl,
+            createdAt = createdAt,
+            signatureDownloadUrl = signatureUrl,
+            pageUrl = "${config.htmlUrl}/releases/tag/${release.tagName}",
+            description = description,
+            version = release.tagName
+        )
+    }
+
+    private fun mapManagerJsonToAsset(
+        config: RepoConfig,
+        releaseInfo: ManagerReleaseInfo
+    ): SilvaAsset {
+        val version = normalizeVersion(releaseInfo.version)
+
+        return SilvaAsset(
+            downloadUrl = releaseInfo.downloadUrl,
+            createdAt = parseTimestamp(releaseInfo.createdAt),
+            signatureDownloadUrl = releaseInfo.signatureDownloadUrl,
+            pageUrl = "${config.htmlUrl}/releases/tag/$version",
+            description = releaseInfo.description,
+            version = version
+        )
+    }
+
+    private fun mapPatchesJsonToAsset(
+        config: RepoConfig,
+        releaseInfo: PatchesReleaseInfo
+    ): SilvaAsset {
+        val version = normalizeVersion(releaseInfo.version)
+
+        return SilvaAsset(
+            downloadUrl = releaseInfo.downloadUrl,
+            createdAt = parseTimestamp(releaseInfo.createdAt),
+            signatureDownloadUrl = releaseInfo.signatureDownloadUrl?.ifBlank { null },
+            pageUrl = "${config.htmlUrl}/releases/tag/$version",
+            description = releaseInfo.description,
+            version = version
+        )
+    }
+
+    private fun findSignatureUrl(release: GitHubRelease, asset: GitHubAsset): String? {
+        val base = asset.name.substringBeforeLast('.', asset.name)
+        val candidates = listOf(
+            "${asset.name}.sig",
+            "${asset.name}.asc",
+            "$base.sig",
+            "$base.asc"
+        )
+        return release.assets.firstOrNull { it.name in candidates }?.downloadUrl
+    }
+
+    private fun parseTimestamp(timestamp: String): LocalDateTime {
+        // Handle different timestamp formats
+        val normalized = when {
+            // Already has timezone info
+            timestamp.endsWith("Z", ignoreCase = true) ||
+                    timestamp.contains("+") ||
+                    timestamp.contains("T") && timestamp.lastIndexOf("-") > 10 -> timestamp
+
+            // Missing timezone - add Z for UTC
+            else -> "${timestamp}Z"
+        }
+
+        return Instant.parse(normalized).toLocalDateTime(TimeZone.UTC)
+    }
+
+    private fun normalizeVersion(version: String): String =
+        if (version.startsWith("v")) version else "v$version"
+
+    private fun isManagerAsset(asset: GitHubAsset): Boolean =
+        asset.name.endsWith(".apk", ignoreCase = true) ||
+                asset.contentType?.contains("android.package-archive", ignoreCase = true) == true
+
+    // ============================================================================
+    // REGION: Manager Updates
+    // ============================================================================
+
+    /** Returns `true` if the currently installed manager is itself a dev/prerelease build. */
+    val isDevBuild: Boolean
+        get() = BuildConfig.VERSION_NAME.contains('-')
+
+    /**
+     * Get latest manager update using GitHub API
+     */
+    private suspend fun getManagerFromGitHub(): APIResponse<SilvaAsset> {
+        val includePrerelease = prefs.useManagerPrereleases.get()
+        return fetchReleaseAsset(managerConfig, includePrerelease, ::isManagerAsset)
+    }
+
+    /**
+     * Get manager release info from static JSON file
+     */
+    private suspend fun getManagerFromJson(branch: String): APIResponse<SilvaAsset> {
+        val url = if (branch == "dev") MANAGER_PRERELEASE_JSON_URL else MANAGER_RELEASE_JSON_URL
+        return when (val response = client.request<ManagerReleaseInfo> {
+            url(url)
+            header("Cache-Control", "no-cache")
+        }) {
+            is APIResponse.Success -> {
+                val mapped = runCatching {
+                    mapManagerJsonToAsset(managerConfig, response.data).also { asset ->
+                        Log.d(tag, "Manager from JSON ($branch): version=${asset.version}, url=${asset.downloadUrl}")
+                    }
+                }
+
+                mapped.fold(
+                    onSuccess = { APIResponse.Success(it) },
+                    onFailure = { error ->
+                        Log.w(tag, "Failed to parse manager JSON ($branch)", error)
+                        APIResponse.Failure(APIFailure(error, null))
+                    }
+                )
+            }
+            is APIResponse.Error -> APIResponse.Error(response.error)
+            is APIResponse.Failure -> APIResponse.Failure(response.error)
+        }
+    }
+
+    /**
+     * Get app update - returns the newest available version if it is strictly newer
+     * than the currently installed one.
+     * The dev channel always contains the latest version.
+     *
+     * Matches the FCM subscription matrix in [app.silva.manager.util.syncFcmTopics].
+     */
+    suspend fun getAppUpdate(): SilvaAsset? {
+        val usePrereleases = prefs.useManagerPrereleases.get()
+        val currentWeight = versionWeight(BuildConfig.VERSION_NAME.removePrefix("v"))
+        val branch = if (usePrereleases || isDevBuild) "dev" else "main"
+
+        val candidate = if (USE_MANAGER_DIRECT_JSON) {
+            getManagerFromJson(branch).fallbackTo {
+                Log.w(tag, "Manager JSON unavailable, falling back to GitHub API")
+                getManagerFromGitHub()
+            }.getOrNull()
+        } else {
+            getManagerFromGitHub().getOrNull()
+        }
+
+        return candidate?.takeIf {
+            versionWeight(it.version.removePrefix("v")) > currentWeight
+        }
+    }
+
+    /**
+     * Converts a version string to a comparable weight for sorting.
+     * Stable versions rank higher than pre-release with the same core.
+     */
+    private fun versionWeight(version: String): Long {
+        val dashIdx = version.indexOf('-')
+        val core = if (dashIdx >= 0) version.substring(0, dashIdx) else version
+        val pre = if (dashIdx >= 0) version.substring(dashIdx + 1) else null
+        val parts = core.split('.').map { it.toIntOrNull() ?: 0 }
+        val major = parts.getOrElse(0) { 0 }.toLong()
+        val minor = parts.getOrElse(1) { 0 }.toLong()
+        val patch = parts.getOrElse(2) { 0 }.toLong()
+        val preWeight = if (pre == null) 100_000L else pre.split('.').lastOrNull()?.toLongOrNull() ?: 0L
+        return major * 1_000_000_000L + minor * 1_000_000L + patch * 100_000L + preWeight
+    }
+
+    // ============================================================================
+    // REGION: Changelog (CHANGELOG.md)
+    // ============================================================================
+
+    suspend fun fetchManagerChangelog(): List<ChangelogEntry> {
+        val branch = if (isDevBuild) "dev" else "main"
+        return fetchChangelogFromRepo(managerConfig, branch, "app/CHANGELOG.md")
+    }
+
+    /**
+     * Fetch and parse CHANGELOG.md from the first-party patches repository.
+     */
+    suspend fun fetchPatchesChangelog(branch: String = "main"): List<ChangelogEntry> {
+        return fetchChangelogFromRepo(patchesConfig, branch)
+    }
+
+    /**
+     * Fetch and parse CHANGELOG.md from an arbitrary raw URL.
+     * Used for third-party bundles that follow the Silva template.
+     *
+     * @param changelogUrl Direct URL to the raw CHANGELOG.md file.
+     */
+    suspend fun fetchChangelogFromUrl(changelogUrl: String): List<ChangelogEntry> {
+        Log.d(tag, "Fetching changelog from: $changelogUrl")
+        return when (val response = client.request<String> { url(changelogUrl) }) {
+            is APIResponse.Success -> ChangelogParser.parse(response.data)
+            is APIResponse.Error, is APIResponse.Failure -> {
+                Log.w(tag, "Failed to fetch changelog from $changelogUrl")
+                emptyList()
+            }
+        }
+    }
+
+    /**
+     * Derive the raw CHANGELOG.md URL from a patches-bundle.json endpoint URL.
+     * Returns null if the endpoint is not a recognizable GitHub URL.
+     *
+     * Examples:
+     *   https://raw.githubusercontent.com/SilvaApp/morphe-patches/main/patches-bundle.json
+     *   → https://raw.githubusercontent.com/SilvaApp/morphe-patches/main/CHANGELOG.md
+     */
+    fun changelogUrlFromBundleEndpoint(endpoint: String): String? {
+        return try {
+            val uri = java.net.URI(endpoint)
+            val host = uri.host?.lowercase(java.util.Locale.US) ?: return null
+            val parts = uri.path?.trim('/')?.split('/')?.filter { it.isNotBlank() } ?: return null
+
+            when (host) {
+                "raw.githubusercontent.com" -> {
+                    // Format: owner/repo/branch/...
+                    if (parts.size < 3) return null
+                    val base = parts.take(3).joinToString("/")
+                    "https://raw.githubusercontent.com/$base/CHANGELOG.md"
+                }
+                "github.com" -> {
+                    // Format: owner/repo  or  owner/repo/tree/branch/...
+                    if (parts.size < 2) return null
+                    val branch = if (parts.size >= 4 && parts[2] in listOf("tree", "blob")) parts[3] else "main"
+                    "https://raw.githubusercontent.com/${parts[0]}/${parts[1]}/$branch/CHANGELOG.md"
+                }
+                else -> null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private suspend fun fetchChangelogFromRepo(
+        config: RepoConfig,
+        branch: String,
+        path: String = "CHANGELOG.md"
+    ): List<ChangelogEntry> {
+        val url = config.rawFileUrl(branch, path)
+        Log.d(tag, "Fetching $path from: $url")
+        return when (val response = client.request<String> { url(url) }) {
+            is APIResponse.Success -> ChangelogParser.parse(response.data)
+            is APIResponse.Error, is APIResponse.Failure -> {
+                Log.w(tag, "Failed to fetch $path for ${config.name} @ $branch")
+                emptyList()
+            }
+        }
+    }
+
+    // ============================================================================
+    // REGION: Patches Updates
+    // ============================================================================
+
+    /**
+     * Get patches update from Silva API
+     */
+    private suspend fun getPatchesFromApi(usePrerelease: Boolean): APIResponse<SilvaAsset> {
+        val route = if (usePrerelease) "patches/prerelease" else "patches"
+        return apiRequest(route)
+    }
+
+    /**
+     * Get patches update from static JSON file
+     */
+    private suspend fun getPatchesFromJson(usePrerelease: Boolean): APIResponse<SilvaAsset> {
+        val branch = if (usePrerelease) "dev" else "main"
+
+        return when (val response = rawFileRequest<PatchesReleaseInfo>(patchesConfig, branch, "patches-bundle.json")) {
+            is APIResponse.Success -> {
+                val mapped = runCatching {
+                    mapPatchesJsonToAsset(patchesConfig, response.data).also { asset ->
+                        Log.d(tag, "Patches from JSON: version=${asset.version}, url=${asset.downloadUrl}")
+                    }
+                }
+
+                mapped.fold(
+                    onSuccess = { APIResponse.Success(it) },
+                    onFailure = { error ->
+                        Log.w(tag, "Failed to parse patches JSON", error)
+                        APIResponse.Failure(APIFailure(error, null))
+                    }
+                )
+            }
+            is APIResponse.Error -> APIResponse.Error(response.error)
+            is APIResponse.Failure -> APIResponse.Failure(response.error)
+        }
+    }
+
+    /**
+     * Get patches update - uses JSON or API based on configuration.
+     * Pass [usePrerelease] explicitly so each bundle can control its own channel independently.
+     */
+    suspend fun getPatchesUpdate(usePrerelease: Boolean): APIResponse<SilvaAsset> {
+        return if (USE_PATCHES_DIRECT_JSON) {
+            getPatchesFromJson(usePrerelease).fallbackTo {
+                Log.w(tag, "Falling back to Silva API for patches")
+                getPatchesFromApi(usePrerelease)
+            }
+        } else {
+            getPatchesFromApi(usePrerelease)
+        }
+    }
+
+    // ============================================================================
+    // REGION: GitHub Release Asset Fetching
+    // ============================================================================
+
+    private suspend fun fetchReleaseAsset(
+        config: RepoConfig,
+        includePrerelease: Boolean,
+        matcher: (GitHubAsset) -> Boolean
+    ): APIResponse<SilvaAsset> {
+        return when (val response = githubRequest<List<GitHubRelease>>(config, "releases")) {
+            is APIResponse.Success -> {
+                runCatching {
+                    val release = response.data.firstOrNull { release ->
+                        !release.draft &&
+                                (includePrerelease || !release.prerelease) &&
+                                release.assets.any(matcher)
+                    } ?: throw IllegalStateException("No matching release found")
+
+                    val asset = release.assets.first(matcher)
+                    mapReleaseToAsset(config, release, asset)
+                }.fold(
+                    onSuccess = { APIResponse.Success(it) },
+                    onFailure = { APIResponse.Failure(APIFailure(it, null)) }
+                )
+            }
+            is APIResponse.Error -> APIResponse.Error(response.error)
+            is APIResponse.Failure -> APIResponse.Failure(response.error)
+        }
+    }
+
+    // ============================================================================
+    // REGION: Pull Request Artifacts
+    // ============================================================================
+
+    suspend fun getAssetFromPullRequest(
+        owner: String,
+        repo: String,
+        pullRequestNumber: String
+    ): SilvaAsset {
+        val config = RepoConfig(
+            owner = owner,
+            name = repo,
+            apiBase = "https://api.github.com/repos/$owner/$repo",
+            htmlUrl = "https://github.com/$owner/$repo"
+        )
+
+        val run = getPullRequestRun(config, pullRequestNumber)
+        val artifact = getRunArtifact(config, run.id, pullRequestNumber)
+
+        return SilvaAsset(
+            downloadUrl = artifact.archiveDownloadUrl,
+            createdAt = parseTimestamp(artifact.createdAt),
+            pageUrl = "${config.htmlUrl}/pull/$pullRequestNumber",
+            description = run.displayTitle,
+            version = run.headSha
+        )
+    }
+
+    private suspend fun getPullRequestRun(
+        config: RepoConfig,
+        pullRequestNumber: String
+    ): GitHubActionRun {
+        val pull = githubRequest<GitHubPullRequest>(config, "pulls/$pullRequestNumber")
+            .successOrThrow("PR #$pullRequestNumber")
+
+        val targetSha = pull.head.sha
+        var page = 1
+
+        while (true) {
+            val runs = githubRequest<GitHubActionRuns>(
+                config,
+                "actions/runs?per_page=100&page=$page"
+            ).successOrThrow("Workflow runs for PR #$pullRequestNumber (page $page)")
+
+            runs.workflowRuns.firstOrNull { it.headSha == targetSha }?.let { return it }
+
+            if (runs.workflowRuns.isEmpty()) {
+                throw Exception("No GitHub Actions run found for PR #$pullRequestNumber with SHA $targetSha")
+            }
+
+            page++
+        }
+    }
+
+    private suspend fun getRunArtifact(
+        config: RepoConfig,
+        runId: String,
+        pullRequestNumber: String
+    ): GitHubActionArtifact {
+        val artifacts = githubRequest<GitHubActionRunArtifacts>(
+            config,
+            "actions/runs/$runId/artifacts"
+        ).successOrThrow("PR artifacts for PR #$pullRequestNumber")
+
+        return artifacts.artifacts.firstOrNull()
+            ?: throw Exception("The latest commit in this PR didn't have any artifacts. Did the GitHub action run correctly?")
+    }
+
+    // ============================================================================
+    // REGION: Helper Extensions
+    // ============================================================================
+
+    private inline fun <T> APIResponse<T>.fallbackTo(
+        fallback: () -> APIResponse<T>
+    ): APIResponse<T> {
+        return when (this) {
+            is APIResponse.Success -> this
+            is APIResponse.Error, is APIResponse.Failure -> fallback()
+        }
+    }
+}
+
+fun <T> APIResponse<T>.successOrThrow(context: String): T {
+    return when (this) {
+        is APIResponse.Success -> data
+        is APIResponse.Error -> throw Exception("Failed fetching $context: ${error.message}", error)
+        is APIResponse.Failure -> throw Exception("Failed fetching $context: ${error.message}", error)
+    }
+}

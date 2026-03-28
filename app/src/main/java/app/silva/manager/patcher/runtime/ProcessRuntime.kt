@@ -1,0 +1,303 @@
+package app.silva.manager.patcher.runtime
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
+import android.util.Log
+import androidx.core.content.ContextCompat
+import app.silva.manager.BuildConfig
+import app.silva.manager.patcher.LibraryResolver
+import app.silva.manager.patcher.logger.Logger
+import app.silva.manager.patcher.runtime.process.IPatcherEvents
+import app.silva.manager.patcher.runtime.process.IPatcherProcess
+import app.silva.manager.patcher.runtime.process.Parameters
+import app.silva.manager.patcher.runtime.process.PatchConfiguration
+import app.silva.manager.patcher.runtime.process.PatcherProcess
+import app.silva.manager.patcher.worker.ProgressEventHandler
+import app.silva.manager.ui.model.State
+import app.silva.manager.util.Options
+import app.silva.manager.util.PM
+import app.silva.manager.util.PatchSelection
+import app.silva.manager.util.tag
+import com.github.pgreze.process.Redirect
+import com.github.pgreze.process.process
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import org.koin.core.component.inject
+import java.io.File
+import kotlin.math.max
+
+// Max memory value. Slightly higher values may work for some devices
+// but patching YT is the same time with both 1024 and 1600 memory.
+// If too much memory is requested then some devices become extremely slow
+// for unknown reason (using flash memory as swap file?).
+const val PROCESS_RUNTIME_MEMORY_MAX_LIMIT = 1280
+const val PROCESS_RUNTIME_MEMORY_MAX_LIMIT_INITIALIZATION = 1024
+const val PROCESS_RUNTIME_MEMORY_DEFAULT = 640
+const val PROCESS_RUNTIME_MEMORY_DEFAULT_MINIMUM = 512
+const val PROCESS_RUNTIME_MEMORY_LOW_WARNING = 512
+const val PROCESS_RUNTIME_MEMORY_STEP = 128
+
+// Sentinel value indicating the memory limit has never been set
+// triggers adaptive calculation on first use
+const val PROCESS_RUNTIME_MEMORY_NOT_SET = -1
+
+/**
+ * Calculates an adaptive memory limit based on total device RAM.
+ * Uses ~25% of total RAM, rounded to the nearest [PROCESS_RUNTIME_MEMORY_STEP],
+ * clamped between [PROCESS_RUNTIME_MEMORY_DEFAULT_MINIMUM] and [PROCESS_RUNTIME_MEMORY_MAX_LIMIT].
+ *
+ * Example results:
+ *  2 GB RAM  → 512 MB
+ *  3 GB RAM  → 768 MB
+ *  4 GB RAM  → 1024 MB
+ *  6 GB+ RAM → 1536 MB (capped)
+ */
+fun calculateAdaptiveMemoryLimit(context: Context): Int {
+    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+    val memInfo = android.app.ActivityManager.MemoryInfo()
+    activityManager.getMemoryInfo(memInfo)
+
+    val totalRamMb = (memInfo.totalMem / (1024 * 1024)).toInt()
+    val adaptive = ((totalRamMb * 0.25).toInt() / PROCESS_RUNTIME_MEMORY_STEP) * PROCESS_RUNTIME_MEMORY_STEP
+
+    return adaptive.coerceIn(PROCESS_RUNTIME_MEMORY_DEFAULT_MINIMUM, PROCESS_RUNTIME_MEMORY_MAX_LIMIT)
+}
+
+/**
+ * Runs the patcher in another process by using the app_process binary and IPC.
+ */
+class ProcessRuntime(
+    private val context: Context,
+    // On Android Q and below, memory retry loop is unreliable - skip it and let the caller fall back
+    private val skipMemoryRetry: Boolean = Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q
+) : Runtime(context) {
+    private val pm: PM by inject()
+
+    private suspend fun awaitBinderConnection(): IPatcherProcess {
+        val binderFuture = CompletableDeferred<IPatcherProcess>()
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val binder =
+                    intent.getBundleExtra(INTENT_BUNDLE_KEY)?.getBinder(BUNDLE_BINDER_KEY)!!
+
+                binderFuture.complete(IPatcherProcess.Stub.asInterface(binder))
+            }
+        }
+
+        ContextCompat.registerReceiver(context, receiver, IntentFilter().apply {
+            addAction(CONNECT_TO_APP_ACTION)
+        }, ContextCompat.RECEIVER_NOT_EXPORTED)
+
+        return try {
+            withTimeout(10000L) {
+                binderFuture.await()
+            }
+        } finally {
+            context.unregisterReceiver(receiver)
+        }
+    }
+
+    override suspend fun execute(
+        inputFile: String,
+        outputFile: String,
+        packageName: String,
+        selectedPatches: PatchSelection,
+        options: Options,
+        logger: Logger,
+        onPatchCompleted: suspend () -> Unit,
+        onProgress: ProgressEventHandler,
+        stripNativeLibs: Boolean,
+    ) = coroutineScope {
+        val minMemoryLimit = 200
+        var memoryMB = max(minMemoryLimit, prefs.patcherProcessMemoryLimit.get())
+        var retried = false
+
+        while (true) {
+            try {
+                executeWithMemory(
+                    memoryMB,
+                    inputFile,
+                    outputFile,
+                    packageName,
+                    selectedPatches,
+                    options,
+                    stripNativeLibs,
+                    logger,
+                    onPatchCompleted,
+                    onProgress
+                )
+                // Success - update preference and return.
+                if (retried && prefs.patcherProcessMemoryLimit.get() != memoryMB) {
+                    if (memoryMB < PROCESS_RUNTIME_MEMORY_DEFAULT) {
+                        // Don't save a value lower than the expected minimum.
+                        // Instead, allow discovering the actual memory limit again next time.
+                        memoryMB = PROCESS_RUNTIME_MEMORY_DEFAULT
+                    }
+                    Log.i(tag, "Updating process memory limit setting to: $memoryMB")
+                    prefs.patcherProcessMemoryLimit.update(memoryMB)
+                }
+
+                return@coroutineScope
+            } catch (e: Exception) {
+                val isMemoryFailure = when (e) {
+                    is ProcessExitException -> e.exitCode == OOM_EXIT_CODE || e.exitCode == SIGKILL_EXIT_CODE
+                    is RemoteFailureException -> e.originalStackTrace.contains("OutOfMemoryError", ignoreCase = true)
+                    else -> false
+                }
+
+                if (isMemoryFailure && !skipMemoryRetry && memoryMB > minMemoryLimit) {
+                    retried = true
+                    memoryMB -= PROCESS_RUNTIME_MEMORY_STEP
+                    Log.i(tag, "Process memory limit failed, retrying with: $memoryMB")
+                    continue
+                }
+                throw e
+            }
+        }
+    }
+
+    private suspend fun executeWithMemory(
+        memoryLimit: Int,
+        inputFile: String,
+        outputFile: String,
+        packageName: String,
+        selectedPatches: PatchSelection,
+        options: Options,
+        stripNativeLibs: Boolean,
+        logger: Logger,
+        onPatchCompleted: suspend () -> Unit,
+        onProgress: ProgressEventHandler,
+    ) = coroutineScope {
+        // Get the location of our own Apk.
+        val managerBaseApk = pm.getPackageInfo(context.packageName)!!.applicationInfo!!.sourceDir
+        val propOverride = resolvePropOverride(context)?.absolutePath
+
+        val heapSizeString = "${memoryLimit}M"
+        val env =
+            System.getenv().toMutableMap().apply {
+                put("CLASSPATH", managerBaseApk)
+                if (propOverride != null) {
+                    // Override the props used by ART to set the memory limit.
+                    put("LD_PRELOAD", propOverride)
+                    put("PROP_dalvik.vm.heapgrowthlimit", heapSizeString)
+                    put("PROP_dalvik.vm.heapsize", heapSizeString)
+                } else {
+                    Log.w(tag, "Skipping prop override on Android ${Build.VERSION.SDK_INT}")
+                }
+            }
+
+        val appProcessBin = resolveAppProcessBin(context)
+
+        launch(Dispatchers.IO) {
+            val result = process(
+                appProcessBin,
+                "-Djava.io.tmpdir=$cacheDir", // The process will use /tmp if this isn't set, which is a problem because that folder is not accessible on Android.
+                "/", // The unused cmd-dir parameter
+                "--nice-name=${context.packageName}:Patcher",
+                PatcherProcess::class.java.name, // The class with the main function.
+                context.packageName,
+                env = env,
+                stdout = Redirect.CAPTURE,
+                stderr = Redirect.CAPTURE,
+            ) { line ->
+                // The process shouldn't generally be writing to stdio. Log any lines we get as warnings.
+                logger.warn("[STDIO]: $line")
+            }
+
+            Log.d(tag, "Process finished with exit code ${result.resultCode}")
+
+            if (result.resultCode != 0) throw ProcessExitException(result.resultCode)
+        }
+
+        val patching = CompletableDeferred<Unit>()
+        val scope = this
+
+        launch(Dispatchers.IO) {
+            val binder = awaitBinderConnection()
+//            binderRef.set(binder)
+
+            // Android Studio's fast deployment feature causes an issue where the other process will be running older code compared to the main process.
+            // The patcher process is running outdated code if the randomly generated BUILD_ID numbers don't match.
+            // To fix it, clear the cache in the Android settings or disable fast deployment (Run configurations -> Edit Configurations -> app -> Enable "always deploy with package manager").
+            if (binder.buildId() != BuildConfig.BUILD_ID) throw Exception("app_process is running outdated code. Clear the app cache or disable disable Android 11 deployment optimizations in your IDE")
+
+            val eventHandler = object : IPatcherEvents.Stub() {
+                override fun log(level: String, msg: String) = logger.log(enumValueOf(level), msg)
+
+                override fun patchSucceeded() {
+                    scope.launch { onPatchCompleted() }
+                }
+
+                override fun progress(name: String?, state: String?, msg: String?) =
+                    onProgress(name, state?.let { enumValueOf<State>(it) }, msg)
+
+                override fun finished(exceptionStackTrace: String?) {
+                    runCatching { binder.exit() }
+
+                    exceptionStackTrace?.let {
+                        patching.completeExceptionally(RemoteFailureException(it))
+                        return
+                    }
+                    patching.complete(Unit)
+                }
+            }
+
+            val parameters = Parameters(
+                aaptPath = aaptPath,
+                frameworkDir = frameworkPath,
+                cacheDir = cacheDir,
+                packageName = packageName,
+                inputFile = inputFile,
+                outputFile = outputFile,
+                configurations = bundles().map { (uid, bundle) ->
+                    PatchConfiguration(
+                        bundle,
+                        selectedPatches[uid].orEmpty(),
+                        options[uid].orEmpty()
+                    )
+                },
+                stripNativeLibs = stripNativeLibs
+            )
+
+            binder.start(parameters, eventHandler)
+        }
+
+        // Wait until patching finishes.
+        patching.await()
+    }
+
+    companion object : LibraryResolver() {
+        private const val APP_PROCESS_BIN_PATH = "/system/bin/app_process"
+        private const val APP_PROCESS_BIN_PATH_64 = "/system/bin/app_process64"
+        private const val APP_PROCESS_BIN_PATH_32 = "/system/bin/app_process32"
+        const val OOM_EXIT_CODE = 134
+        const val SIGKILL_EXIT_CODE = 137
+
+        const val CONNECT_TO_APP_ACTION = "CONNECT_TO_APP_ACTION"
+        const val INTENT_BUNDLE_KEY = "BUNDLE"
+        const val BUNDLE_BINDER_KEY = "BINDER"
+
+        private fun resolvePropOverride(context: Context) = findLibrary(context, "prop_override")
+        private fun resolveAppProcessBin(context: Context): String {
+            val is64Bit = context.applicationInfo.nativeLibraryDir.contains("64")
+            val preferred = if (is64Bit) APP_PROCESS_BIN_PATH_64 else APP_PROCESS_BIN_PATH_32
+            return if (File(preferred).exists()) preferred else APP_PROCESS_BIN_PATH
+        }
+    }
+
+    /**
+     * An [Exception] occurred in the remote process while patching.
+     *
+     * @param originalStackTrace The stack trace of the original [Exception].
+     */
+    class RemoteFailureException(val originalStackTrace: String) : Exception()
+
+    class ProcessExitException(val exitCode: Int) :
+        Exception("Process exited with nonzero exit code $exitCode")
+}

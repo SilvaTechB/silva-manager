@@ -1,0 +1,253 @@
+package app.silva.manager.domain.manager
+
+import android.content.Context
+import android.os.Build
+import android.util.Log
+import app.silva.manager.BuildConfig
+import app.silva.manager.domain.manager.base.BasePreferencesManager
+import app.silva.manager.patcher.runtime.PROCESS_RUNTIME_MEMORY_MAX_LIMIT_INITIALIZATION
+import app.silva.manager.patcher.runtime.PROCESS_RUNTIME_MEMORY_NOT_SET
+import app.silva.manager.patcher.runtime.calculateAdaptiveMemoryLimit
+import app.silva.manager.ui.screen.shared.BackgroundType
+import app.silva.manager.ui.theme.Theme
+import app.silva.manager.util.ExportNameFormatter
+import app.silva.manager.util.isArmV7
+import app.silva.manager.util.tag
+import app.silva.manager.worker.UpdateCheckInterval
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
+
+class PreferencesManager(
+    context: Context
+) : BasePreferencesManager(context, "settings") {
+
+    // Appearance tab
+    val backgroundType = enumPreference("background_type", BackgroundType.CIRCLES)
+    val enableBackgroundParallax = booleanPreference("enable_background_parallax", true)
+
+    val dynamicColor = booleanPreference("dynamic_color", true)
+    val pureBlackTheme = booleanPreference("pure_black_theme", false)
+    val themePresetSelectionEnabled = booleanPreference("theme_preset_selection_enabled", true)
+    val themePresetSelectionName = stringPreference("theme_preset_selection_name", "DEFAULT")
+    val customAccentColor = stringPreference("custom_accent_color", "")
+    val customThemeColor = stringPreference("custom_theme_color", "")
+    val theme = enumPreference("theme", Theme.SYSTEM)
+
+    val appLanguage = stringPreference("app_language", "system")
+
+    // Advanced tab
+    val useManagerPrereleases = booleanPreference("manager_prereleases", false)
+
+    /** UIDs of bundles that have prereleases (dev branch) enabled. Stored as strings. */
+    val bundlePrereleasesEnabled = stringSetPreference("bundle_prereleases_enabled", emptySet())
+
+    /** UIDs of bundles for which experimental app versions are preferred as the recommended target. */
+    val bundleExperimentalVersionsEnabled = stringSetPreference("bundle_experimental_versions_enabled", emptySet())
+
+    /**  Whether to send Android system notifications when updates are available in the background. */
+    val backgroundUpdateNotifications = booleanPreference("background_update_notifications", false)
+
+    /**  How often the background update check should run. */
+    val updateCheckInterval = enumPreference("update_check_interval", UpdateCheckInterval.DAILY)
+
+    /** Tracks whether the POST_NOTIFICATIONS runtime permission dialog has already been shown at least once on first launch (Android 13+). */
+    val notificationPermissionRequested = booleanPreference("notification_permission_requested", false)
+
+    val useExpertMode = booleanPreference("use_expert_mode", false)
+
+    val stripUnusedNativeLibs = booleanPreference("strip_unused_native_libs", false)
+
+    // System tab
+    val installerPrimary = stringPreference("installer_primary", InstallerPreferenceTokens.INTERNAL)
+    val promptInstallerOnInstall = booleanPreference("prompt_installer_on_install", false)
+    val installerCustomComponents = stringSetPreference("installer_custom_components", emptySet())
+    val installerHiddenComponents = stringSetPreference("installer_hidden_components", emptySet())
+
+    val useProcessRuntime = booleanPreference(
+        "use_process_runtime",
+        // Use process runtime fails for Android 10 and lower.
+        // Armv7 silently fails and nobody has researched why yet.
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !isArmV7()
+    )
+    val patcherProcessMemoryLimit = intPreference("use_process_runtime_memory_limit", PROCESS_RUNTIME_MEMORY_NOT_SET)
+
+    val keystoreAlias = stringPreference("keystore_alias", KeystoreManager.DEFAULT)
+    val keystorePass = stringPreference("keystore_pass", KeystoreManager.DEFAULT)
+
+    // Other hidden settings
+    val gitHubPat = stringPreference("github_pat", "")
+    val includeGitHubPatInExports = booleanPreference("include_github_pat_in_exports", false)
+
+    val patchedAppExportFormat = stringPreference(
+        "patched_app_export_format",
+        ExportNameFormatter.DEFAULT_TEMPLATE
+    )
+    val allowMeteredUpdates = booleanPreference("allow_metered_updates", true)
+    val firstLaunch = booleanPreference("first_launch", true)
+    val installationTime = longPreference("manager_installation_time", 0)
+    val disablePatchVersionCompatCheck = booleanPreference("disable_patch_version_compatibility_check", false)
+
+    // Hidden preference to track if prerelease was auto-enabled
+    private val prereleaseAutoEnabled = booleanPreference("prerelease_auto_enabled", false)
+
+    init {
+        runBlocking {
+            if (installationTime.get() == 0L) {
+                val now = System.currentTimeMillis()
+                installationTime.update(now)
+                Log.d(tag, "Installation time set to $now")
+            }
+
+            // Initialize process memory limit adaptively on first launch
+            if (patcherProcessMemoryLimit.get() == PROCESS_RUNTIME_MEMORY_NOT_SET) {
+                val adaptive = calculateAdaptiveMemoryLimit(context).coerceAtMost(
+                    PROCESS_RUNTIME_MEMORY_MAX_LIMIT_INITIALIZATION
+                )
+                Log.d(tag, "Initializing process memory limit to $adaptive MB (device RAM-based)")
+                patcherProcessMemoryLimit.update(adaptive)
+            }
+
+            // Auto-enable prereleases for dev versions
+            if (isDevVersion() && !prereleaseAutoEnabled.get()) {
+                Log.d(tag, "Dev version detected (${BuildConfig.VERSION_NAME}), auto-enabling prereleases")
+                edit {
+                    useManagerPrereleases.value = true
+                    bundlePrereleasesEnabled += "0"
+                    prereleaseAutoEnabled.value = true
+                }
+            }
+        }
+    }
+
+    @Serializable
+    data class SettingsSnapshot(
+        val dynamicColor: Boolean? = null,
+        val pureBlackTheme: Boolean? = null,
+        val customAccentColor: String? = null,
+        val customThemeColor: String? = null,
+        val themePresetSelectionName: String? = null,
+        val themePresetSelectionEnabled: Boolean? = null,
+        val stripUnusedNativeLibs: Boolean? = null,
+        val theme: Theme? = null,
+        val appLanguage: String? = null,
+        val api: String? = null,
+        val gitHubPat: String? = null,
+        val includeGitHubPatInExports: Boolean? = null,
+        val useProcessRuntime: Boolean? = null,
+        val patcherProcessMemoryLimit: Int? = null,
+        val autoCollapsePatcherSteps: Boolean? = null,
+        val patchedAppExportFormat: String? = null,
+        val officialBundleRemoved: Boolean? = null,
+        val officialBundleCustomDisplayName: String? = null,
+        val allowMeteredUpdates: Boolean? = null,
+        val installerPrimary: String? = null,
+        val installerCustomComponents: Set<String>? = null,
+        val installerHiddenComponents: Set<String>? = null,
+        val keystoreAlias: String? = null,
+        val keystorePass: String? = null,
+        val firstLaunch: Boolean? = null,
+        val showManagerUpdateDialogOnLaunch: Boolean? = null,
+        val useManagerPrereleases: Boolean? = null,
+        val bundlePrereleasesEnabled: Set<String>? = null,
+        val bundleExperimentalVersionsEnabled: Set<String>? = null,
+        val disablePatchVersionCompatCheck: Boolean? = null,
+        val disableSelectionWarning: Boolean? = null,
+        val disableUniversalPatchCheck: Boolean? = null,
+        val suggestedVersionSafeguard: Boolean? = null,
+        val disablePatchSelectionConfirmations: Boolean? = null,
+        val collapsePatchActionsOnSelection: Boolean? = null,
+        val patchSelectionFilterFlags: Int? = null,
+        val patchSelectionSortAlphabetical: Boolean? = null,
+        val patchSelectionSortSettingsMode: String? = null,
+        val patchSelectionActionOrder: String? = null,
+        val patchSelectionHiddenActions: Set<String>? = null,
+        val acknowledgedDownloaderPlugins: Set<String>? = null,
+        val autoSaveDownloaderApks: Boolean? = null,
+        val backgroundType: BackgroundType? = null,
+        val useExpertMode: Boolean? = null,
+        val backgroundUpdateNotifications: Boolean? = null,
+        val updateCheckInterval: UpdateCheckInterval? = null,
+    )
+
+    suspend fun exportSettings() = SettingsSnapshot(
+        dynamicColor = dynamicColor.get(),
+        pureBlackTheme = pureBlackTheme.get(),
+        customAccentColor = customAccentColor.get(),
+        customThemeColor = customThemeColor.get(),
+        themePresetSelectionName = themePresetSelectionName.get(),
+        themePresetSelectionEnabled = themePresetSelectionEnabled.get(),
+        stripUnusedNativeLibs = stripUnusedNativeLibs.get(),
+        theme = theme.get(),
+        appLanguage = appLanguage.get(),
+        gitHubPat = gitHubPat.get().takeIf { includeGitHubPatInExports.get() },
+        includeGitHubPatInExports = includeGitHubPatInExports.get(),
+        useProcessRuntime = useProcessRuntime.get(),
+        patcherProcessMemoryLimit = patcherProcessMemoryLimit.get(),
+        patchedAppExportFormat = patchedAppExportFormat.get(),
+        allowMeteredUpdates = allowMeteredUpdates.get(),
+        installerPrimary = installerPrimary.get(),
+        installerCustomComponents = installerCustomComponents.get(),
+        installerHiddenComponents = installerHiddenComponents.get(),
+        keystoreAlias = keystoreAlias.get(),
+        keystorePass = keystorePass.get(),
+        firstLaunch = firstLaunch.get(),
+        useManagerPrereleases = useManagerPrereleases.get(),
+        bundlePrereleasesEnabled = bundlePrereleasesEnabled.get(),
+        bundleExperimentalVersionsEnabled = bundleExperimentalVersionsEnabled.get(),
+        disablePatchVersionCompatCheck = disablePatchVersionCompatCheck.get(),
+        backgroundType = backgroundType.get(),
+        useExpertMode = useExpertMode.get(),
+        backgroundUpdateNotifications = backgroundUpdateNotifications.get(),
+        updateCheckInterval = updateCheckInterval.get()
+    )
+
+    suspend fun importSettings(snapshot: SettingsSnapshot) = edit {
+        snapshot.dynamicColor?.let { dynamicColor.value = it }
+        snapshot.pureBlackTheme?.let { pureBlackTheme.value = it }
+        snapshot.customAccentColor?.let { customAccentColor.value = it }
+        snapshot.customThemeColor?.let { customThemeColor.value = it }
+        snapshot.themePresetSelectionName?.let { themePresetSelectionName.value = it }
+        snapshot.themePresetSelectionEnabled?.let { themePresetSelectionEnabled.value = it }
+        snapshot.stripUnusedNativeLibs?.let { stripUnusedNativeLibs.value = it }
+        snapshot.theme?.let { theme.value = it }
+        snapshot.appLanguage?.let { appLanguage.value = it }
+        snapshot.gitHubPat?.let { gitHubPat.value = it }
+        snapshot.includeGitHubPatInExports?.let { includeGitHubPatInExports.value = it }
+        snapshot.useProcessRuntime?.let { useProcessRuntime.value = it }
+        snapshot.patcherProcessMemoryLimit?.let { patcherProcessMemoryLimit.value = it }
+        snapshot.patchedAppExportFormat?.let { patchedAppExportFormat.value = it }
+        snapshot.allowMeteredUpdates?.let { allowMeteredUpdates.value = it }
+        snapshot.installerPrimary?.let { installerPrimary.value = it }
+        snapshot.installerCustomComponents?.let { installerCustomComponents.value = it }
+        snapshot.installerHiddenComponents?.let { installerHiddenComponents.value = it }
+        snapshot.keystoreAlias?.let { keystoreAlias.value = it }
+        snapshot.keystorePass?.let { keystorePass.value = it }
+        snapshot.firstLaunch?.let { firstLaunch.value = it }
+        snapshot.useManagerPrereleases?.let { useManagerPrereleases.value = it }
+        snapshot.bundlePrereleasesEnabled?.let { bundlePrereleasesEnabled.value = it }
+        snapshot.bundleExperimentalVersionsEnabled?.let { bundleExperimentalVersionsEnabled.value = it }
+        snapshot.disablePatchVersionCompatCheck?.let { disablePatchVersionCompatCheck.value = it }
+        snapshot.backgroundType?.let { backgroundType.value = it }
+        snapshot.useExpertMode?.let { useExpertMode.value = it }
+        snapshot.backgroundUpdateNotifications?.let { backgroundUpdateNotifications.value = it }
+        snapshot.updateCheckInterval?.let { updateCheckInterval.value = it }
+    }
+
+    companion object {
+        /**
+         * Check if current version is a development/prerelease version
+         */
+        fun isDevVersion(): Boolean {
+            return BuildConfig.VERSION_NAME.contains("-dev", ignoreCase = true)
+        }
+    }
+}
+
+object InstallerPreferenceTokens {
+    const val INTERNAL = ":internal:"
+    const val SYSTEM = ":system:"
+    const val ROOT = ":root:" // Legacy value, mapped to AUTO_SAVED.
+    const val AUTO_SAVED = ":auto_saved:"
+    const val SHIZUKU = ":shizuku:"
+    const val NONE = ":none:"
+}

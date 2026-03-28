@@ -1,0 +1,1901 @@
+/*
+ * Copyright 2026 Morphe.
+ * https://github.com/MorpheApp/silva-manager
+ */
+
+package app.silva.manager.ui.screen.home
+
+import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import app.silva.manager.R
+import app.silva.manager.patcher.patch.Option
+import app.silva.manager.patcher.patch.PatchBundleInfo
+import app.silva.manager.patcher.patch.PatchInfo
+import app.silva.manager.ui.screen.shared.*
+import app.silva.manager.util.Options
+import app.silva.manager.util.PatchSelection
+import app.silva.manager.util.rememberFolderPickerWithPermission
+import app.silva.manager.util.toFilePath
+import kotlinx.coroutines.launch
+
+/**
+ * Advanced patch selection and configuration dialog.
+ * Shown before patching when expert mode is enabled.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun ExpertModeDialog(
+    bundles: List<PatchBundleInfo.Scoped>,
+    selectedPatches: PatchSelection,
+    options: Options,
+    onPatchToggle: (bundleUid: Int, patchName: String) -> Unit,
+    onOptionChange: (bundleUid: Int, patchName: String, optionKey: String, value: Any?) -> Unit,
+    onResetOptions: (bundleUid: Int, patchName: String) -> Unit,
+    onDismiss: () -> Unit,
+    onProceed: () -> Unit,
+    allowIncompatible: Boolean = false
+) {
+    var selectedPatchForOptions by remember { mutableStateOf<Pair<Int, PatchInfo>?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+    var searchVisible by remember { mutableStateOf(false) }
+    var showMultipleSourcesWarning by remember { mutableStateOf(false) }
+
+    // Create local mutable state from incoming selectedPatches
+    var localSelectedPatches by remember(selectedPatches) {
+        mutableStateOf(selectedPatches.toMap())
+    }
+
+    // Get all patches with their enabled state
+    val allPatchesInfo = remember(bundles, localSelectedPatches, allowIncompatible) {
+        bundles.map { bundle ->
+            val selected = localSelectedPatches[bundle.uid] ?: emptySet()
+            // In Expert mode, always show all patches (force allowIncompatible = true)
+            val patches = bundle.patchSequence(true)
+                .map { patch -> patch to (patch.name in selected) }
+                .sortedBy { (patch, _) -> patch.name } // Sort patches alphabetically
+                .toList()
+
+            bundle to patches
+        }.filter { it.second.isNotEmpty() }
+            .sortedByDescending { (bundle, _) -> bundle.compatible.size }
+    }
+
+    // Filter patches based on search query
+    val filteredPatchesInfo = remember(allPatchesInfo, searchQuery, localSelectedPatches) {
+        if (searchQuery.isBlank()) {
+            allPatchesInfo
+        } else {
+            allPatchesInfo.mapNotNull { (bundle, patches) ->
+                val filtered = patches.filter { (patch, _) ->
+                    patch.name.contains(searchQuery, ignoreCase = true) ||
+                            patch.description?.contains(searchQuery, ignoreCase = true) == true
+                }
+                if (filtered.isEmpty()) null else bundle to filtered
+            }
+        }
+    }
+
+    val totalSelectedCount = localSelectedPatches.values.sumOf { it.size }
+    val totalPatchesCount = allPatchesInfo.sumOf { it.second.size }
+
+    // Check if multiple bundles are selected
+    val hasMultipleBundles = localSelectedPatches.count { (_, patches) -> patches.isNotEmpty() } > 1
+
+    // Patch manipulation helpers
+    fun selectAll(bundleUid: Int, patches: List<Pair<PatchInfo, Boolean>>) {
+        val map = localSelectedPatches.toMutableMap()
+        val set = map[bundleUid]?.toMutableSet() ?: mutableSetOf()
+        patches.forEach { (patch, enabled) -> if (!enabled) set.add(patch.name) }
+        map[bundleUid] = set
+        localSelectedPatches = map
+    }
+
+    fun deselectAll(bundleUid: Int, patches: List<Pair<PatchInfo, Boolean>>) {
+        val map = localSelectedPatches.toMutableMap()
+        val set = map[bundleUid]?.toMutableSet() ?: mutableSetOf()
+        patches.forEach { (patch, enabled) -> if (enabled) set.remove(patch.name) }
+        if (set.isEmpty()) map.remove(bundleUid) else map[bundleUid] = set
+        localSelectedPatches = map
+    }
+
+    fun resetToDefault(bundleUid: Int, allPatches: List<Pair<PatchInfo, Boolean>>) {
+        val defaults = allPatches.filter { (patch, _) -> patch.include }.map { (patch, _) -> patch.name }.toSet()
+        val map = localSelectedPatches.toMutableMap()
+        if (defaults.isEmpty()) map.remove(bundleUid) else map[bundleUid] = defaults
+        localSelectedPatches = map
+    }
+
+    fun togglePatch(bundleUid: Int, patchName: String) {
+        val map = localSelectedPatches.toMutableMap()
+        val set = map[bundleUid]?.toMutableSet() ?: mutableSetOf()
+        if (patchName in set) set.remove(patchName) else set.add(patchName)
+        if (set.isEmpty()) map.remove(bundleUid) else map[bundleUid] = set
+        localSelectedPatches = map
+    }
+
+    fun syncAndProceed() {
+        localSelectedPatches.forEach { (bundleUid, patches) ->
+            val original = selectedPatches[bundleUid] ?: emptySet()
+            patches.forEach { if (it !in original) onPatchToggle(bundleUid, it) }
+            original.forEach { if (it !in patches) onPatchToggle(bundleUid, it) }
+        }
+        selectedPatches.forEach { (bundleUid, patches) ->
+            if (bundleUid !in localSelectedPatches) patches.forEach { onPatchToggle(bundleUid, it) }
+        }
+        onProceed()
+    }
+
+    MorpheDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.expert_mode_title),
+        titleTrailingContent = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Count badge
+                InfoBadge(
+                    text = "$totalSelectedCount/$totalPatchesCount",
+                    style = if (totalSelectedCount > 0) InfoBadgeStyle.Primary else InfoBadgeStyle.Default,
+                    isCompact = true
+                )
+
+                // Search toggle button
+                FilledTonalIconButton(
+                    onClick = {
+                        searchVisible = !searchVisible
+                        if (!searchVisible) searchQuery = ""
+                    },
+                    modifier = Modifier.size(36.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = if (searchVisible)
+                            MaterialTheme.colorScheme.primaryContainer
+                        else
+                            MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (searchVisible)
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Icon(
+                        imageVector = if (searchVisible) Icons.Outlined.SearchOff else Icons.Outlined.Search,
+                        contentDescription = stringResource(R.string.expert_mode_search),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        },
+        dismissOnClickOutside = false,
+        footer = null,
+        compactPadding = true,
+        scrollable = false
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Search bar
+            AnimatedVisibility(
+                visible = searchVisible,
+                enter = expandVertically(animationSpec = tween(250)) + fadeIn(tween(250)),
+                exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(tween(200))
+            ) {
+                MorpheDialogTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = {
+                        Text(stringResource(R.string.expert_mode_search))
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Search,
+                            contentDescription = stringResource(R.string.expert_mode_search)
+                        )
+                    },
+                    showClearButton = true
+                )
+            }
+
+            // Layout mode is determined by total bundle count
+            val hasMultipleBundleLayout = allPatchesInfo.size > 1
+
+            if (!hasMultipleBundleLayout) {
+                // Single bundle
+                val (bundle, allPatches) = allPatchesInfo.first()
+                val filteredPatches = filteredPatchesInfo.firstOrNull { it.first.uid == bundle.uid }?.second
+                val displayPatches = filteredPatches ?: emptyList()
+                val enabledCount = displayPatches.count { it.second }
+                val totalCount = displayPatches.size
+
+                // Bundle name header
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        modifier = Modifier.size(32.dp),
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = Icons.Outlined.Source,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = bundle.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = LocalDialogTextColor.current,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                BundlePatchControls(
+                    enabledCount = enabledCount,
+                    totalCount = totalCount,
+                    onSelectAll = { selectAll(bundle.uid, displayPatches) },
+                    onDeselectAll = { deselectAll(bundle.uid, displayPatches) },
+                    onResetToDefault = { resetToDefault(bundle.uid, allPatches) }
+                )
+
+                if (filteredPatches == null) {
+                    // No search results for this bundle
+                    EmptyStateContent(
+                        hasSearch = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        PatchListWithUniversalSection(
+                            patches = filteredPatches,
+                            onToggle = { togglePatch(bundle.uid, it) },
+                            onConfigureOptions = {
+                                if (!it.options.isNullOrEmpty()) selectedPatchForOptions = bundle.uid to it
+                            }
+                        )
+                    }
+                }
+            } else {
+                // Multiple bundles tab layout
+                val pagerState = rememberPagerState { allPatchesInfo.size }
+                val coroutineScope = rememberCoroutineScope()
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    // Tab row
+                    SecondaryScrollableTabRow(
+                        selectedTabIndex = pagerState.currentPage,
+                        edgePadding = 0.dp,
+                        divider = {},
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ) {
+                        allPatchesInfo.forEachIndexed { index, (bundle, patches) ->
+                            val hasResults = filteredPatchesInfo.any { it.first.uid == bundle.uid }
+                            val enabledCount = patches.count { it.second }
+                            val totalCount = patches.size
+                            val isSelected = pagerState.currentPage == index
+
+                            Tab(
+                                selected = isSelected,
+                                onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
+                                selectedContentColor = MaterialTheme.colorScheme.primary,
+                                unselectedContentColor = if (hasResults)
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+                                ) {
+                                    Text(
+                                        text = bundle.name,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+
+                                    Spacer(modifier = Modifier.height(2.dp))
+
+                                    // Patch count badge
+                                    InfoBadge(
+                                        text = "$enabledCount/$totalCount",
+                                        style = if (isSelected && hasResults) InfoBadgeStyle.Primary else InfoBadgeStyle.Default,
+                                        isCompact = true,
+                                        isCentered = true
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        thickness = 0.5.dp
+                    )
+
+                    // Controls fixed below the tab row
+                    val currentIndex = pagerState.currentPage
+                    val (currentBundle, currentAllPatches) = allPatchesInfo[currentIndex]
+                    val currentFiltered = filteredPatchesInfo.firstOrNull { it.first.uid == currentBundle.uid }?.second
+
+                    if (currentFiltered != null) {
+                        BundlePatchControls(
+                            enabledCount = currentFiltered.count { it.second },
+                            totalCount = currentFiltered.size,
+                            onSelectAll = { selectAll(currentBundle.uid, currentFiltered) },
+                            onDeselectAll = { deselectAll(currentBundle.uid, currentFiltered) },
+                            onResetToDefault = { resetToDefault(currentBundle.uid, currentAllPatches) },
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    } else {
+                        // Reserve space so pager height stays stable when a tab has no results
+                        Spacer(modifier = Modifier.height(52.dp))
+                    }
+
+                    // Pager
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) { pageIndex ->
+                        val (bundle, _) = allPatchesInfo[pageIndex]
+                        val patches = filteredPatchesInfo.firstOrNull { it.first.uid == bundle.uid }?.second
+
+                        if (patches == null) {
+                            // No search results for this bundle
+                            EmptyStateContent(
+                                hasSearch = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight()
+                            )
+                        } else {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                PatchListWithUniversalSection(
+                                    patches = patches,
+                                    onToggle = { togglePatch(bundle.uid, it) },
+                                    onConfigureOptions = {
+                                        if (!it.options.isNullOrEmpty()) selectedPatchForOptions = bundle.uid to it
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Proceed to Patching button
+            MorpheDialogButton(
+                text = stringResource(R.string.expert_mode_proceed),
+                onClick = {
+                    // Check if multiple bundles are selected
+                    if (hasMultipleBundles) {
+                        showMultipleSourcesWarning = true
+                    } else {
+                        syncAndProceed()
+                    }
+                },
+                enabled = totalSelectedCount > 0,
+                icon = Icons.Outlined.AutoFixHigh,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+
+    // Multiple bundles warning dialog
+    if (showMultipleSourcesWarning) {
+        MultipleSourcesWarningDialog(
+            onDismiss = { showMultipleSourcesWarning = false },
+            onProceed = {
+                showMultipleSourcesWarning = false
+                syncAndProceed()
+            }
+        )
+    }
+
+    // Options dialog
+    selectedPatchForOptions?.let { (bundleUid, patch) ->
+        PatchOptionsDialog(
+            patch = patch,
+            isDefaultBundle = bundleUid == 0,
+            values = options[bundleUid]?.get(patch.name),
+            onValueChange = { key, value ->
+                onOptionChange(bundleUid, patch.name, key, value)
+            },
+            onReset = {
+                onResetOptions(bundleUid, patch.name)
+            },
+            onDismiss = { selectedPatchForOptions = null }
+        )
+    }
+}
+
+/**
+ * Renders a patch list split into regular patches and a "Universal patches" section at the bottom.
+ * Universal patches are those with no compatible packages defined.
+ */
+@Composable
+private fun PatchListWithUniversalSection(
+    patches: List<Pair<PatchInfo, Boolean>>,
+    onToggle: (String) -> Unit,
+    onConfigureOptions: (PatchInfo) -> Unit,
+) {
+    val (regular, universal) = remember(patches) {
+        patches.partition { (patch, _) -> !patch.compatiblePackages.isNullOrEmpty() }
+    }
+
+    regular.forEach { (patch, isEnabled) ->
+        PatchCard(
+            patch = patch,
+            isEnabled = isEnabled,
+            onToggle = { onToggle(patch.name) },
+            onConfigureOptions = { onConfigureOptions(patch) },
+            hasOptions = !patch.options.isNullOrEmpty()
+        )
+    }
+
+    if (universal.isNotEmpty()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = if (regular.isNotEmpty()) 8.dp else 0.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Public,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(14.dp)
+            )
+            Text(
+                text = stringResource(R.string.expert_mode_universal_patches),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            HorizontalDivider(
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                thickness = 0.5.dp
+            )
+        }
+
+        universal.forEach { (patch, isEnabled) ->
+            PatchCard(
+                patch = patch,
+                isEnabled = isEnabled,
+                onToggle = { onToggle(patch.name) },
+                onConfigureOptions = { onConfigureOptions(patch) },
+                hasOptions = !patch.options.isNullOrEmpty()
+            )
+        }
+    }
+}
+
+/**
+ * Bundle controls: three action buttons (Select All / Default / Deselect All).
+ */
+@Composable
+private fun BundlePatchControls(
+    enabledCount: Int,
+    totalCount: Int,
+    onSelectAll: () -> Unit,
+    onDeselectAll: () -> Unit,
+    onResetToDefault: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Action buttons
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
+    ) {
+        ActionPillButton(
+            onClick = onSelectAll,
+            icon = Icons.Outlined.DoneAll,
+            contentDescription = stringResource(R.string.expert_mode_enable_all),
+            enabled = enabledCount < totalCount,
+            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            )
+        )
+        ActionPillButton(
+            onClick = onResetToDefault,
+            icon = Icons.Outlined.Restore,
+            contentDescription = stringResource(R.string.default_),
+            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        )
+        ActionPillButton(
+            onClick = onDeselectAll,
+            icon = Icons.Outlined.ClearAll,
+            contentDescription = stringResource(R.string.expert_mode_disable_all),
+            enabled = enabledCount > 0,
+            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                contentColor = MaterialTheme.colorScheme.error,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            )
+        )
+    }
+}
+
+
+/**
+ * Individual patch card with toggle and options button.
+ */
+@Composable
+private fun PatchCard(
+    patch: PatchInfo,
+    isEnabled: Boolean,
+    onToggle: () -> Unit,
+    onConfigureOptions: () -> Unit,
+    hasOptions: Boolean
+) {
+    // Localized strings for accessibility
+    val settings = stringResource(R.string.settings)
+    val enabledState = stringResource(R.string.enabled)
+    val disabledState = stringResource(R.string.disabled)
+    val patchState = if (isEnabled) enabledState else disabledState
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onToggle)
+            .semantics {
+                stateDescription = patchState
+                contentDescription = "${patch.name}, $patchState"
+            },
+        shape = RoundedCornerShape(14.dp),
+        color = if (isEnabled) {
+            MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+        } else {
+            MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp).copy(alpha = 0.5f)
+        },
+        contentColor = if (isEnabled) {
+            MaterialTheme.colorScheme.onSurface
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        },
+        tonalElevation = if (isEnabled) 2.dp else 0.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Patch info
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = if (hasOptions) 8.dp else 0.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = patch.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isEnabled)
+                        LocalDialogTextColor.current
+                    else
+                        LocalDialogSecondaryTextColor.current.copy(alpha = 0.5f)
+                )
+
+                if (!patch.description.isNullOrBlank()) {
+                    Text(
+                        text = patch.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isEnabled)
+                            LocalDialogSecondaryTextColor.current
+                        else
+                            LocalDialogSecondaryTextColor.current.copy(alpha = 0.4f)
+                    )
+                }
+            }
+
+            // Options button (only enabled if patch is enabled)
+            if (hasOptions) {
+                FilledTonalIconButton(
+                    onClick = {
+                        // Prevent click propagation to card
+                        onConfigureOptions()
+                    },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .semantics {
+                            contentDescription = "${patch.name}, $settings"
+                        },
+                    enabled = isEnabled,
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Empty state content when no patches match search or none selected.
+ */
+@Composable
+private fun EmptyStateContent(
+    hasSearch: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Icon(
+                imageVector = if (hasSearch) Icons.Outlined.SearchOff else Icons.Outlined.Info,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = LocalDialogSecondaryTextColor.current
+            )
+            Text(
+                text = stringResource(
+                    if (hasSearch)
+                        R.string.expert_mode_no_results
+                    else
+                        R.string.home_no_patches_available
+                ),
+                style = MaterialTheme.typography.bodyLarge,
+                color = LocalDialogSecondaryTextColor.current,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * Represents the resolved UI kind of a patch option.
+ * Used to drive an exhaustive when-expression in [PatchOptionsDialog].
+ */
+private sealed interface OptionKind {
+    data object StringList      : OptionKind
+    data object Color           : OptionKind
+    data object PathWithPresets : OptionKind
+    data object StringDropdown  : OptionKind
+    data object Path            : OptionKind
+    data object StringText      : OptionKind
+    data object BooleanToggle   : OptionKind
+    data object IntLong         : OptionKind
+    data object FloatDouble     : OptionKind
+    data object ArrayDropdown   : OptionKind
+}
+
+/**
+ * Resolves the [OptionKind] for a given [option] and its current [value].
+ * All type-detection heuristics live here, keeping the UI when-expression clean and exhaustive.
+ */
+private fun resolveOptionKind(option: Option<*>, value: Any?): OptionKind {
+    val t        = option.type.toString()
+    val isArray  = t.contains("Array")
+    val isString = t.contains("String") && !isArray
+
+    return when {
+        // List<String> — free-form comma-separated input
+        t.contains("List") && t.contains("String") -> OptionKind.StringList
+
+        // Color — string whose key/title hints "color" or value looks like a color literal
+        isString && (
+                option.title.contains("color", ignoreCase = true) ||
+                        option.key.contains("color", ignoreCase = true) ||
+                        (value is String && (value.startsWith("#") || value.startsWith("@android:color/")))
+                ) -> OptionKind.Color
+
+        // Path/folder string with presets — combined dropdown + path picker
+        isString && option.presets?.isNotEmpty() == true && (
+                option.description.contains("folder",   ignoreCase = true) ||
+                        option.description.contains("mipmap",   ignoreCase = true) ||
+                        option.description.contains("drawable", ignoreCase = true)
+                ) -> OptionKind.PathWithPresets
+
+        // String with presets — pure dropdown
+        isString && option.presets?.isNotEmpty() == true -> OptionKind.StringDropdown
+
+        // Path/folder string without presets — file picker + optional creator buttons
+        isString && option.key != "customName" && (
+                option.key.contains("icon",   ignoreCase = true) ||
+                        option.key.contains("header", ignoreCase = true) ||
+                        option.key.contains("custom", ignoreCase = true) ||
+                        option.description.contains("folder",   ignoreCase = true) ||
+                        option.description.contains("image",    ignoreCase = true) ||
+                        option.description.contains("mipmap",   ignoreCase = true) ||
+                        option.description.contains("drawable", ignoreCase = true)
+                ) -> OptionKind.Path
+
+        // Plain string text field
+        isString -> OptionKind.StringText
+
+        // Boolean toggle
+        t.contains("Boolean") -> OptionKind.BooleanToggle
+
+        // Integer / Long numeric input
+        (t.contains("Int") || t.contains("Long")) && !isArray -> OptionKind.IntLong
+
+        // Float / Double decimal input
+        (t.contains("Float") || t.contains("Double")) && !isArray -> OptionKind.FloatDouble
+
+        // Array — dropdown driven by presets
+        isArray -> OptionKind.ArrayDropdown
+
+        // Safe fallback
+        else -> OptionKind.StringText
+    }
+}
+
+/**
+ * Options dialog for configuring patch options.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PatchOptionsDialog(
+    patch: PatchInfo,
+    isDefaultBundle: Boolean,
+    values: Map<String, Any?>?,
+    onValueChange: (String, Any?) -> Unit,
+    onReset: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    // Derive the target package from the patch's compatible packages list
+    val packageName = patch.compatiblePackages?.firstOrNull()?.packageName.orEmpty()
+
+    var showColorPicker by remember { mutableStateOf<Pair<String, String>?>(null) }
+
+    MorpheDialog(
+        onDismissRequest = onDismiss,
+        title = patch.name,
+        titleTrailingContent = {
+            IconButton(onClick = onReset) {
+                Icon(
+                    imageVector = Icons.Outlined.Restore,
+                    contentDescription = stringResource(R.string.reset),
+                    tint = LocalDialogTextColor.current
+                )
+            }
+        },
+        footer = {
+            MorpheDialogButton(
+                text = stringResource(R.string.close),
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            if (!patch.description.isNullOrBlank()) {
+                Text(
+                    text = patch.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = LocalDialogSecondaryTextColor.current
+                )
+            }
+
+            if (patch.options == null) return@Column
+
+            patch.options.forEach { option ->
+                val key   = option.key
+                val value = if (values == null || key !in values) option.default else values[key]
+
+                when (resolveOptionKind(option, value)) {
+                    OptionKind.StringList -> ListStringInputOption(
+                        title = option.title,
+                        description = option.description,
+                        value = (value as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                        onValueChange = { onValueChange(key, it) }
+                    )
+
+                    OptionKind.Color -> ColorOptionWithPresets(
+                        title = option.title,
+                        description = option.description,
+                        value = value as? String ?: "#000000",
+                        presets = option.presets,
+                        onPresetSelect = { onValueChange(key, it) },
+                        onCustomColorClick = {
+                            showColorPicker = key to (value as? String ?: "#000000")
+                        }
+                    )
+
+                    OptionKind.PathWithPresets -> {
+                        val presets = option.presets as Map<String, Any?>
+                        PathWithPresetsOption(
+                            title = option.title,
+                            description = option.description,
+                            value = value?.toString() ?: "",
+                            presets = presets,
+                            packageName = packageName,
+                            isDefaultBundle = isDefaultBundle,
+                            onValueChange = { onValueChange(key, it.ifBlank { null }) }
+                        )
+                    }
+
+                    OptionKind.StringDropdown -> {
+                        val presets = option.presets as Map<String, Any?>
+                        DropdownOptionItem(
+                            title = option.title,
+                            description = option.description,
+                            value = value?.toString() ?: "",
+                            presets = presets,
+                            onValueChange = { onValueChange(key, it) }
+                        )
+                    }
+
+                    OptionKind.Path -> PathInputOption(
+                        title = option.title,
+                        description = option.description,
+                        value = value?.toString() ?: "",
+                        packageName = packageName,
+                        isDefaultBundle = isDefaultBundle,
+//                        required = option.required,
+                        onValueChange = { onValueChange(key, it.ifBlank { null }) }
+                    )
+
+                    OptionKind.StringText -> TextInputOption(
+                        title = option.title,
+//                        description = option.description,
+                        value = value?.toString() ?: "",
+//                        required = option.required,
+                        keyboardType = KeyboardType.Text,
+                        onValueChange = { onValueChange(key, it) }
+                    )
+
+                    OptionKind.BooleanToggle -> BooleanOptionItem(
+                        title = option.title,
+                        description = option.description,
+                        value = value as? Boolean == true,
+                        onValueChange = { onValueChange(key, it) }
+                    )
+
+                    OptionKind.IntLong -> TextInputOption(
+                        title = option.title,
+//                        description = option.description,
+                        value = (value as? Number)?.toLong()?.toString() ?: "",
+//                        required = option.required,
+                        keyboardType = KeyboardType.Number,
+                        onValueChange = { it.toLongOrNull()?.let { num -> onValueChange(key, num) } }
+                    )
+
+                    OptionKind.FloatDouble -> TextInputOption(
+                        title = option.title,
+//                        description = option.description,
+                        value = (value as? Number)?.toFloat()?.toString() ?: "",
+//                        required = option.required,
+                        keyboardType = KeyboardType.Decimal,
+                        onValueChange = { it.toFloatOrNull()?.let { num -> onValueChange(key, num) } }
+                    )
+
+                    OptionKind.ArrayDropdown -> DropdownOptionItem(
+                        title = option.title,
+                        description = option.description,
+                        value = value?.toString() ?: "",
+                        presets = option.presets ?: emptyMap(),
+                        onValueChange = { onValueChange(key, it) }
+                    )
+                }
+            }
+        }
+    }
+
+    // Color picker dialog
+    showColorPicker?.let { (key, currentColor) ->
+        ColorPickerDialog(
+            title = patch.options?.find { it.key == key }?.title ?: key,
+            currentColor = currentColor,
+            onColorSelected = { newColor ->
+                onValueChange(key, newColor)
+                showColorPicker = null
+            },
+            onDismiss = { showColorPicker = null }
+        )
+    }
+}
+
+@Composable
+private fun ColorOptionWithPresets(
+    title: String,
+    description: String,
+    value: String,
+    presets: Map<String, *>?,
+    onPresetSelect: (String) -> Unit,
+    onCustomColorClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Title and description
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = LocalDialogTextColor.current
+            )
+            if (description.isNotBlank()) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LocalDialogSecondaryTextColor.current
+                )
+            }
+        }
+
+        // Presets
+        if (!presets.isNullOrEmpty()) {
+            presets.forEach { (label, presetValue) ->
+                val colorValue = presetValue?.toString() ?: return@forEach
+                ColorPresetItem(
+                    label = label,
+                    colorValue = colorValue,
+                    isSelected = value == colorValue,
+                    onClick = { onPresetSelect(colorValue) }
+                )
+            }
+        }
+
+        val isValueInPresets = presets?.values?.any { it.toString() == value } == true
+        val isCustomSelected = !isValueInPresets
+
+        // Custom color button
+        ColorPresetItem(
+            label = stringResource(R.string.custom_color),
+            colorValue = value,
+            isSelected = isCustomSelected,
+            isCustom = true,
+            onClick = onCustomColorClick
+        )
+    }
+}
+
+@Composable
+fun ColorPresetItem(
+    label: String,
+    colorValue: String,
+    isSelected: Boolean,
+    isCustom: Boolean = false,
+    enabled: Boolean = true,
+    cornerRadius: Dp = 12.dp,
+    elevation: Dp = 0.dp,
+    borderWidth: Dp = 0.dp,
+    onClick: (() -> Unit)? = null
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(cornerRadius))
+            .then(
+                if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick)
+                else Modifier
+            ),
+        shape = RoundedCornerShape(cornerRadius),
+        color = if (isSelected)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        else
+            MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        tonalElevation = elevation,
+        border = if (isSelected && borderWidth > 0.dp) {
+            BorderStroke(borderWidth, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+        } else if (!isSelected && borderWidth > 0.dp) {
+            BorderStroke(borderWidth, MaterialTheme.colorScheme.outlineVariant)
+        } else null
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isCustom && !isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Palette,
+                        contentDescription = null,
+                        tint = LocalDialogTextColor.current.copy(alpha = 0.6f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            } else {
+                ColorPreviewDot(
+                    colorValue = colorValue,
+                    size = 32
+                )
+            }
+
+            Text(
+                text = if (isCustom) stringResource(R.string.custom_color) else label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (isSelected)
+                    MaterialTheme.colorScheme.primary
+                else
+                    LocalDialogTextColor.current,
+                modifier = Modifier.weight(1f)
+            )
+
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PathInputOption(
+    title: String,
+    description: String,
+    value: String,
+    packageName: String,
+    isDefaultBundle: Boolean,
+//    required: Boolean,
+    onValueChange: (String) -> Unit
+) {
+    var showIconCreator by remember { mutableStateOf(false) }
+    var showHeaderCreator by remember { mutableStateOf(false) }
+
+    // Detect if this is icon-related or header-related field
+    // Check header first, then icon (header takes priority)
+    val isHeaderField = title.contains("header", ignoreCase = true) ||
+            description.contains("header", ignoreCase = true)
+
+    val isIconField = !isHeaderField && (
+            title.contains("icon", ignoreCase = true) ||
+                    description.contains("mipmap", ignoreCase = true)
+            )
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+//        Text(
+//            text = title + if (required) " *" else "",
+//            style = MaterialTheme.typography.bodyMedium,
+//            fontWeight = FontWeight.Medium,
+//            color = LocalDialogTextColor.current
+//        )
+
+        // Folder picker button (needs permissions for icon/header creation)
+        val folderPicker = rememberFolderPickerWithPermission { uri ->
+            // Convert URI to path for patch options compatibility
+            onValueChange(uri.toFilePath())
+        }
+
+        MorpheDialogTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = {
+                Text(title)
+            },
+            placeholder = {
+                Text("/storage/emulated/0/folder")
+            },
+            showClearButton = true,
+            onFolderPickerClick = { folderPicker() }
+        )
+
+        // Create Icon button (only for the default Morphe bundle)
+        if (isIconField && isDefaultBundle) {
+            MorpheDialogOutlinedButton(
+                text = stringResource(R.string.adaptive_icon_create),
+                onClick = { showIconCreator = true },
+                icon = Icons.Outlined.AutoAwesome,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // Create Header button (only for the default Morphe bundle)
+        if (isHeaderField && isDefaultBundle) {
+            MorpheDialogOutlinedButton(
+                text = stringResource(R.string.header_creator_create),
+                onClick = { showHeaderCreator = true },
+                icon = Icons.Outlined.Image,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // Instructions
+        if (description.isNotBlank()) {
+            ExpandableSurface(
+                title = stringResource(R.string.patch_option_instructions),
+                content = {
+                    ScrollableInstruction(
+                        description = description,
+                        maxHeight = 280.dp
+                    )
+                }
+            )
+        }
+    }
+
+    // Icon creator dialog
+    if (showIconCreator) {
+        AdaptiveIconCreatorDialog(
+            packageName = packageName,
+            onDismiss = { showIconCreator = false },
+            onIconCreated = { path ->
+                onValueChange(path)
+                showIconCreator = false
+            }
+        )
+    }
+
+    // Header creator dialog
+    if (showHeaderCreator) {
+        HeaderCreatorDialog(
+            packageName = packageName,
+            onDismiss = { showHeaderCreator = false },
+            onHeaderCreated = { path ->
+                onValueChange(path)
+                showHeaderCreator = false
+            }
+        )
+    }
+}
+
+/**
+ * Combined path input with dropdown presets.
+ * Used for options that have predefined values but also allow custom folder paths.
+ */
+@Composable
+private fun PathWithPresetsOption(
+    title: String,
+    description: String,
+    value: String,
+    presets: Map<String, *>,
+    packageName: String,
+    isDefaultBundle: Boolean,
+    onValueChange: (String) -> Unit
+) {
+    var showIconCreator by remember { mutableStateOf(false) }
+    var showHeaderCreator by remember { mutableStateOf(false) }
+
+    // Detect if this is icon-related or header-related field
+    // Check header first, then icon (header takes priority)
+    val isHeaderField = title.contains("header", ignoreCase = true) ||
+            description.contains("header", ignoreCase = true)
+
+    val isIconField = !isHeaderField && (
+            title.contains("icon", ignoreCase = true) ||
+                    description.contains("mipmap", ignoreCase = true)
+            )
+
+    // Convert presets to Map<String, String> for dropdown
+    val dropdownItems = presets.mapValues { it.value.toString() }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+//        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+//            Text(
+//                text = title,
+//                style = MaterialTheme.typography.bodyMedium,
+//                fontWeight = FontWeight.Medium,
+//                color = LocalDialogTextColor.current
+//            )
+//            if (description.isNotBlank()) {
+//                Text(
+//                    text = description,
+//                    style = MaterialTheme.typography.bodySmall,
+//                    color = LocalDialogSecondaryTextColor.current
+//                )
+//            }
+//        }
+
+        // Folder picker
+        val folderPicker = rememberFolderPickerWithPermission { uri ->
+            onValueChange(uri.toFilePath())
+        }
+
+        // Dropdown TextField with folder picker and clear button
+        MorpheDialogDropdownTextField(
+            value = value,
+            onValueChange = onValueChange,
+            dropdownItems = dropdownItems,
+            placeholder = {
+                Text("/storage/emulated/0/folder")
+            },
+            showClearButton = true,
+            onFolderPickerClick = { folderPicker() }
+        )
+
+        // Create Icon button (only for the default Morphe bundle)
+        if (isIconField && isDefaultBundle) {
+            MorpheDialogOutlinedButton(
+                text = stringResource(R.string.adaptive_icon_create),
+                onClick = { showIconCreator = true },
+                icon = Icons.Outlined.AutoAwesome,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // Create Header button (only for the default Morphe bundle)
+        if (isHeaderField && isDefaultBundle) {
+            MorpheDialogOutlinedButton(
+                text = stringResource(R.string.header_creator_create),
+                onClick = { showHeaderCreator = true },
+                icon = Icons.Outlined.Image,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // Instructions (collapsed by default)
+        if (description.isNotBlank()) {
+            ExpandableSurface(
+                title = stringResource(R.string.patch_option_instructions),
+                content = {
+                    ScrollableInstruction(
+                        description = description,
+                        maxHeight = 200.dp
+                    )
+                },
+                icon = Icons.Outlined.Info,
+                initialExpanded = false
+            )
+        }
+    }
+
+    // Icon creator dialog
+    if (showIconCreator) {
+        AdaptiveIconCreatorDialog(
+            packageName = packageName,
+            onDismiss = { showIconCreator = false },
+            onIconCreated = { path ->
+                onValueChange(path)
+                showIconCreator = false
+            }
+        )
+    }
+
+    // Header creator dialog
+    if (showHeaderCreator) {
+        HeaderCreatorDialog(
+            packageName = packageName,
+            onDismiss = { showHeaderCreator = false },
+            onHeaderCreated = { path ->
+                onValueChange(path)
+                showHeaderCreator = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun TextInputOption(
+    title: String,
+//    description: String,
+    value: String,
+//    required: Boolean,
+    keyboardType: KeyboardType,
+    onValueChange: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+//        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+//            Text(
+//                text = title + if (required) " *" else "",
+//                style = MaterialTheme.typography.bodyMedium,
+//                fontWeight = FontWeight.Medium,
+//                color = LocalDialogTextColor.current
+//            )
+//            if (description.isNotBlank()) {
+//                Text(
+//                    text = description,
+//                    style = MaterialTheme.typography.bodySmall,
+//                    color = LocalDialogSecondaryTextColor.current
+//                )
+//            }
+//        }
+
+        MorpheDialogTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = {
+                Text(title)
+            },
+            placeholder = {
+                Text(
+                    stringResource(
+                        when (keyboardType) {
+                            KeyboardType.Number -> R.string.patch_option_enter_number
+                            KeyboardType.Decimal -> R.string.patch_option_enter_decimal
+                            else -> R.string.patch_option_enter_value
+                        }
+                    )
+                )
+            },
+            showClearButton = true,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
+        )
+    }
+}
+
+@Composable
+private fun BooleanOptionItem(
+    title: String,
+    description: String,
+    value: Boolean,
+    onValueChange: (Boolean) -> Unit
+) {
+    val enabledState = stringResource(R.string.enabled)
+    val disabledState = stringResource(R.string.disabled)
+
+    RichSettingsItem(
+        onClick = {},
+        title = title,
+        subtitle = if (description.isNotBlank()) description else null,
+        trailingContent = {
+            Switch(
+                checked = value,
+                onCheckedChange = onValueChange,
+                modifier = Modifier.semantics {
+                    stateDescription = if (value) enabledState else disabledState
+                }
+            )
+        }
+    )
+}
+
+/**
+ * Inline option row that shows current item count and opens [ListStringEditorDialog].
+ */
+@Composable
+private fun ListStringInputOption(
+    title: String,
+    description: String,
+    value: List<String>,
+    onValueChange: (List<String>) -> Unit
+) {
+    var showEditor by remember { mutableStateOf(false) }
+    val textColor = LocalDialogTextColor.current
+    val secondaryColor = LocalDialogSecondaryTextColor.current
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { showEditor = true },
+        shape = RoundedCornerShape(12.dp),
+        color = textColor.copy(alpha = 0.05f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = textColor
+                )
+                if (description.isNotBlank()) {
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = secondaryColor,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (value.isNotEmpty()) {
+                    InfoBadge(
+                        text = "${value.size}",
+                        style = InfoBadgeStyle.Primary,
+                        isCompact = true
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = null,
+                    tint = secondaryColor,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+
+    if (showEditor) {
+        ListStringEditorDialog(
+            title = title,
+            description = description,
+            initialItems = value,
+            onDismiss = { showEditor = false },
+            onConfirm = { newList ->
+                onValueChange(newList)
+                showEditor = false
+            }
+        )
+    }
+}
+
+/**
+ * Dialog for managing a list of string values.
+ */
+@Composable
+private fun ListStringEditorDialog(
+    title: String,
+    description: String,
+    initialItems: List<String>,
+    onDismiss: () -> Unit,
+    onConfirm: (List<String>) -> Unit
+) {
+    var items by remember { mutableStateOf(initialItems.toMutableStateList()) }
+    var inputText by remember { mutableStateOf("") }
+    var inputError by remember { mutableStateOf(false) }
+
+    fun addItem() {
+        val trimmed = inputText.trim()
+        if (trimmed.isBlank()) {
+            inputError = true
+            return
+        }
+        if (trimmed in items) {
+            inputError = true
+            return
+        }
+        items.add(trimmed)
+        inputText = ""
+        inputError = false
+    }
+
+    MorpheDialog(
+        onDismissRequest = onDismiss,
+        title = title,
+        dismissOnClickOutside = false,
+        footer = {
+            MorpheDialogButtonRow(
+                primaryText = stringResource(R.string.save),
+                onPrimaryClick = { onConfirm(items.toList()) },
+                secondaryText = stringResource(android.R.string.cancel),
+                onSecondaryClick = onDismiss
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Description
+            if (description.isNotBlank()) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = LocalDialogSecondaryTextColor.current
+                )
+            }
+
+            // Input row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                MorpheDialogTextField(
+                    value = inputText,
+                    onValueChange = {
+                        inputText = it
+                        inputError = false
+                    },
+                    placeholder = { Text(stringResource(R.string.patch_option_enter_value)) },
+                    isError = inputError,
+                    showClearButton = inputText.isNotBlank(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                        onDone = { addItem() }
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+                FilledTonalIconButton(onClick = { addItem() }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
+                        contentDescription = stringResource(R.string.add)
+                    )
+                }
+            }
+
+            if (inputError) {
+                Text(
+                    text = stringResource(
+                        if (inputText.trim() in items)
+                            R.string.patch_option_list_duplicate
+                        else
+                            R.string.patch_option_list_empty
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            // Items list
+            if (items.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.patch_option_list_empty_state),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = LocalDialogSecondaryTextColor.current
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items.forEachIndexed { index, item ->
+                        ListStringItemRow(
+                            value = item,
+                            onRemove = { items.removeAt(index) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Single item row inside [ListStringEditorDialog].
+ */
+@Composable
+private fun ListStringItemRow(
+    value: String,
+    onRemove: () -> Unit
+) {
+    val textColor = LocalDialogTextColor.current
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp),
+        color = textColor.copy(alpha = 0.06f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = textColor,
+                modifier = Modifier.weight(1f),
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 2
+            )
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = stringResource(R.string.remove),
+                    tint = textColor.copy(alpha = 0.6f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DropdownOptionItem(
+    title: String,
+    description: String,
+    value: String,
+    presets: Map<String, Any?>,
+    onValueChange: (Any?) -> Unit
+) {
+    // Convert presets to String map for dropdown: display name -> value as string
+    val dropdownItems = presets.mapValues { it.value?.toString() ?: "" }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = LocalDialogTextColor.current
+            )
+            if (description.isNotBlank()) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LocalDialogSecondaryTextColor.current
+                )
+            }
+        }
+
+        MorpheDialogDropdownTextField(
+            value = value,
+            onValueChange = { newValue ->
+                // Try to find the actual value from presets by matching the string representation
+                val actualValue = presets.entries.find { it.value?.toString() == newValue }?.value
+                    ?: newValue
+                onValueChange(actualValue)
+            },
+            dropdownItems = dropdownItems
+        )
+    }
+}
+
+@Composable
+fun ExpandableSurface(
+    title: String,
+    content: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Outlined.Info,
+    initialExpanded: Boolean = false,
+    headerTint: Color = LocalDialogTextColor.current
+) {
+    var expanded by remember { mutableStateOf(initialExpanded) }
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = tween(300),
+        label = "rotation"
+    )
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { expanded = !expanded },
+        shape = RoundedCornerShape(12.dp),
+        color = headerTint.copy(alpha = 0.05f)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = headerTint,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = headerTint
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Outlined.ExpandMore,
+                    contentDescription = if (expanded)
+                        stringResource(R.string.collapse)
+                    else
+                        stringResource(R.string.expand),
+                    modifier = Modifier
+                        .size(20.dp)
+                        .rotate(rotationAngle),
+                    tint = LocalDialogTextColor.current.copy(alpha = 0.7f)
+                )
+            }
+
+            // Expandable content
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(animationSpec = tween(300)) + fadeIn(),
+                exit = shrinkVertically(animationSpec = tween(300)) + fadeOut()
+            ) {
+                content()
+            }
+        }
+    }
+}
+
+/**
+ * Scrollable instructions box with fade at bottom.
+ */
+@Composable
+fun ScrollableInstruction(
+    description: String,
+    modifier: Modifier = Modifier,
+    maxHeight: Dp = 300.dp
+) {
+    val scrollState = rememberScrollState()
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(max = maxHeight)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            MorpheSettingsDivider(fullWidth = true)
+
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                lineHeight = MaterialTheme.typography.bodySmall.lineHeight * 1.4f
+            )
+        }
+
+        // Fade at bottom
+        val showFade by remember {
+            derivedStateOf { scrollState.value < scrollState.maxValue }
+        }
+
+        if (showFade) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(24.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.surface
+                            )
+                        )
+                    )
+            )
+        }
+    }
+}
+
+/**
+ * Warning dialog shown when user selects patches from multiple sources.
+ */
+@Composable
+private fun MultipleSourcesWarningDialog(
+    onDismiss: () -> Unit,
+    onProceed: () -> Unit
+) {
+    MorpheDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.expert_mode_multiple_sources_warning_title),
+        footer = {
+            MorpheDialogButtonRow(
+                primaryText = stringResource(R.string.home_dialog_unsupported_version_dialog_proceed),
+                onPrimaryClick = onProceed,
+                secondaryText = stringResource(android.R.string.cancel),
+                onSecondaryClick = onDismiss
+            )
+        }
+    ) {
+        Text(
+            text = stringResource(R.string.expert_mode_multiple_sources_warning_message),
+            style = MaterialTheme.typography.bodyLarge,
+            color = LocalDialogSecondaryTextColor.current
+        )
+    }
+}

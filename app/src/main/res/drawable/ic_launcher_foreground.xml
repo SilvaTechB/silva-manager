@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Silva Manager icon - stylized S lettermark -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Bold stylized S lettermark -->
+    <path
+        android:pathData="
+            M256,88
+            C180,88 128,132 128,192
+            C128,240 158,268 200,284
+            L256,304
+            C296,318 312,332 312,360
+            C312,392 286,416 256,416
+            C220,416 196,396 184,368
+            L128,392
+            C148,436 198,464 256,464
+            C336,464 384,416 384,360
+            C384,308 352,280 310,264
+            L254,244
+            C216,230 200,216 200,192
+            C200,164 224,144 256,144
+            C284,144 306,158 318,180
+            L374,156
+            C354,116 308,88 256,88 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="128"
+                android:startY="88"
+                android:endX="384"
+                android:endY="464"
+                android:type="linear">
+                <item android:offset="0" android:color="#FFFFFF"/>
+                <item android:offset="1" android:color="#C8DCFF"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

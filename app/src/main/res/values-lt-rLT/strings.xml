@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home Screen -->
+    <!-- Home Screen - Update Notifications -->
+    <string name="home_update_error">Nepavyko atnaujinti</string>
+    <string name="home_please_wait">Palaukite</string>
+    <!-- Home Screen - Home Greetings -->
+    <string name="home_greeting_1">Kokią programėlę norėtumėte pataisyti?</string>
+    <!-- Humorous hype message with light nostalgia -->
+    <!-- "Buckle up" referring to fastening your vehicle seat belt. A light-hearted joke to build excitement -->
+    <!-- Sarcastic joke about blocking ads, intentionally over-the-top -->
+    <!-- "Watch ads" refers to watching video ads in unpatched apps -->
+    <string name="home_greeting_5">Norite žiūrėti reklamas? Aš irgi ne</string>
+    <!-- Friendly, slightly mischievous joke about controlling app behavior -->
+    <!-- Whimsical forecast-style joke, not meant literally -->
+    <!-- From mediocrity to amazing -->
+    <!-- Playful exaggeration, making patching feel heroic -->
+    <!-- Light sarcasm, casual and tech-savvy humor -->
+    <!-- Home Screen - Sources Management -->
+    <string name="sources_management_open_in_browser">Atidaryti naršyklėje</string>
+    <string name="sources_management_failed_to_open_url">Nepavyko atidaryti nuorodos</string>
+    <!-- Home Screen - Sources Dialogs -->
+    <!-- Home Screen - Dialog 1: APK Availability -->
+    <!-- Home Screen - Dialog 2: Download Instructions -->
+    <string name="home_download_instructions_steps_title">Instrukcijos:</string>
+    <string name="home_download_instructions_step1">Paspauskite \'%1$s\' mygtuką</string>
+    <string name="home_download_instructions_download_button_toast">Paspauskite atsisiųsti (Download) puslapyje, o ne čia 😊</string>
+    <!-- Home Screen - Dialog 3: File Picker Prompt -->
+    <string name="home_recommended_version">Rekomenduojama versija</string>
+    <string name="home_selected_version">Pasirinkta versija</string>
+    <!-- Home Screen - Dialog 4: Expert Mode Dialog -->
+    <!-- Home Screen - Home Sub-Dialogs -->
+    <string name="home_dialog_wrong_package_title">Pasirinktas netinkamas failas</string>
+    <string name="home_dialog_selected_package">Pasirinktas failas:</string>
+    <!-- Patch Options -->
+    <string name="patch_option_instructions">Instrukcijos</string>
+    <!-- Adaptive Icon Creator -->
+    <!-- Header Creator -->
+    <!-- Home Screen - App Info Screen -->
+    <!-- Home Screen - Root Mode -->
+    <!-- Patcher Screen -->
+    <!-- Patcher Screen - Patcher Steps -->
+    <!-- Patcher Screen - Patcher Worker -->
+    <!-- Patcher Screen - Patcher Messages -->
+    <string name="patcher_message_4">Verdama skaitmeninė magija… ☕</string>
+    <string name="patcher_message_6">Pažiūrėkite į lauką, ten gražu… 🌤️</string>
+    <string name="patcher_message_8">Išpainiojami skaitmeniniai spagečiai… 🍝</string>
+    <!-- Silva patches fix YouTube bugs that Google still has not fixed. -->
+    <string name="patcher_message_13">Jūsų pataisyta programėlė kepama, karšta ir šviežia… 🍳</string>
+    <!-- "bytecode" can be translated from "the app code" -->
+    <!-- Space flight communications callout. -->
+    <string name="patcher_message_16">Išspaudžiama papildoma galia, kaip sultys iš skaitmeninės citrinos… 🍋</string>
+    <!-- Quantum physics (box emoji is a reference to Schrodinger's cat). -->
+    <!-- Throw away reference to a Saturday Night Live sketch. "fever" means sickness or the flu. "prescription" means medical treatment or can be translated from "cure" -->
+    <!-- Expert patcher Screen -->
+    <!-- Patcher Screen - Other hidden strings -->
+    <!-- Settings -->
+    <!-- Settings - Appearance Tab - Background animation -->
+    <!-- Settings - Appearance Tab - Theme -->
+    <!-- Settings - Appearance Tab - Language Selector -->
+    <!-- Settings - Appearance Tab - App Icon Selector -->
+    <!-- Settings - Advanced Tab - Updates Section -->
+    <!-- Notification content -->
+    <!-- Settings - Advanced Tab - Expert settings Section -->
+    <!-- Settings - Advanced Tab - GitHub PAT Settings -->
+    <!-- Settings - Advanced Tab - Patch Options Section -->
+    <string name="settings_advanced_patch_options">Pataisų nustatymai</string>
+    <!-- Settings - Advanced Tab - Patch Options Section: Theme Colors -->
+    <!-- Settings - Advanced Tab - Patch Options Section: Custom Branding -->
+    <!-- Settings - Advanced Tab - Patch Options Section: Custom Header -->
+    <!-- Settings - Advanced Tab - Patch Options Section: Hide Shorts -->
+    <!-- Settings - System Tab - Installer Section -->
+    <!-- Settings - System Tab - Performance Section -->
+    <!-- Settings - System Tab - Import and export keystore -->
+    <!-- Settings - System Tab - Import and Export Manager Settings -->
+    <!-- Settings - System Tab - Debug Section -->
+    <!-- Settings - System Tab - Storage Management Section -->
+    <!-- Settings - System Tab - Storage Management - Patched APKs Management -->
+    <!-- Settings - System Tab - Storage Management - Original APKs Management -->
+    <!-- Settings - System Tab - Storage Management - Patch Selection Management -->
+    <!-- Settings - System Tab - About Section -->
+    <!-- Shared strings -->
+</resources>

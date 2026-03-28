@@ -1,10 +1,10 @@
-# Morphe Manager
+# Silva Manager (Morphe Manager)
 
 Android APK patcher application built with Kotlin/Jetpack Compose.
 
 ## About
 
-Morphe Manager is an Android application based on URV and ReVanced Manager. It patches Android apps using the Morphe patching framework.
+Silva Manager is an Android application based on URV and ReVanced Manager. It patches Android apps using the Morphe patching framework.
 
 ## Build System
 
@@ -15,21 +15,32 @@ Morphe Manager is an Android application based on URV and ReVanced Manager. It p
 
 ## Environment Setup (Replit)
 
-Due to sandbox restrictions, specific configurations are required:
-
 ### Android SDK
-The Android SDK is stored in `/home/runner/workspace/android-sdk/` (must be in workspace, not home, due to filesystem write restrictions).
+The Android SDK is installed at `/home/runner/workspace/android-sdk/` (must be in workspace, not home, due to filesystem write restrictions).
 
-Components installed:
-- Android Platform 35
-- Build Tools 35.0.1
-- NDK 27.0.12077973 (folder contains NDK 27.2 binaries, source.properties set to 27.0)
-- NDK 27.2.12479018 (actual binaries)
-- CMake 3.22.1
+Components installed (from Nix store zips):
+- Android Platform 35 (`platforms/android-35`)
+- Build Tools 35.0.1 (`build-tools/35.0.1`)
+- Platform Tools (`platform-tools/`)
+- NDK 27.0.12077973 (`ndk/27.0.12077973`) — r27, matches `ndkVersion` in `app/build.gradle.kts`
+- NDK 27.2.12479018 (`ndk/27.2.12479018`) — r27c, also available
+- CMake 3.22.1 (`cmake/3.22.1`) — required by the native build
+- CMake 3.31.6 (`cmake/3.31.6`) — from Nix system cmake package
 
 ### Java
 Uses Zulu JDK 17 from the Nix store:
 `/nix/store/7h8xkvyyz4sgxm61rj1s64ncml582qyv-zulu-ca-jdk-17.0.12`
+
+(Falls back to system OpenJDK 17 if Zulu not found)
+
+### SDK Licenses
+Licenses are accepted in `/home/runner/workspace/android-sdk/licenses/`:
+- `android-sdk-license`
+- `android-sdk-preview-license`
+- `android-googletv-license`
+- `google-gdk-license`
+- `intel-android-extra-license`
+- `mips-android-sysimage-license`
 
 ### Required Environment Variables (Secrets)
 - `GITHUB_ACTOR` - GitHub username for Maven package authentication
@@ -37,15 +48,17 @@ Uses Zulu JDK 17 from the Nix store:
 
 ### Gradle Configuration
 - `GRADLE_USER_HOME=/home/runner/workspace/.gradle-home` (workspace location for cache)
-- `JAVA_TOOL_OPTIONS="-XX:-UsePerfData -Xms256m -Xmx2g -Djava.io.tmpdir=/home/runner/workspace/.tmp -Dorg.sqlite.tmpdir=/home/runner/workspace/.tmp"`
+- `JAVA_TOOL_OPTIONS="-XX:-UsePerfData -Xms128m -Xmx1536m -Djava.io.tmpdir=/home/runner/workspace/.tmp -Dorg.sqlite.tmpdir=/home/runner/workspace/.tmp"`
   - `-XX:-UsePerfData` prevents JVM SIGBUS crashes in the sandbox
   - `java.io.tmpdir` redirects temp files from restricted `/tmp` to workspace
   - `org.sqlite.tmpdir` redirects SQLite JDBC native lib extraction (Room KSP)
+  - Max heap reduced to 1536m to avoid OOM kills
 
 ### local.properties
 ```
 sdk.dir=/home/runner/workspace/android-sdk
 ```
+(NDK version is set in `app/build.gradle.kts` as `ndkVersion = "27.0.12077973"`)
 
 ## Building
 
@@ -56,7 +69,9 @@ bash build-debug.sh
 
 The workflow "Build Debug APK" runs the debug build automatically.
 
-Output APK: `app/build/outputs/apk/debug/morphe-manager-{version}.apk`
+Output APK: `app/build/outputs/apk/debug/silva-manager-{version}.apk`
+
+**Note**: First build takes ~5 minutes to download dependencies. Subsequent builds use Gradle cache and take ~1 minute.
 
 ## Dependencies
 

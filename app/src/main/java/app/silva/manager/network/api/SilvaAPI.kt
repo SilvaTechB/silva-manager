@@ -102,16 +102,6 @@ class SilvaAPI(
         }
     }
 
-    private suspend inline fun <reified T> apiRequest(route: String): APIResponse<T> {
-        val normalizedRoute = route.trimStart('/')
-        val urlString = "$MORPHE_API_URL/v2/$normalizedRoute"
-        return client.runWithRetry(route) {
-            client.request {
-                url(urlString)
-            }
-        }
-    }
-
     private suspend inline fun <reified T> rawFileRequest(
         config: RepoConfig,
         branch: String,
@@ -391,11 +381,10 @@ class SilvaAPI(
     // ============================================================================
 
     /**
-     * Get patches update from Silva API
+     * Get patches update from silva-patches GitHub releases (fallback when JSON is unavailable)
      */
     private suspend fun getPatchesFromApi(usePrerelease: Boolean): APIResponse<SilvaAsset> {
-        val route = if (usePrerelease) "patches/prerelease" else "patches"
-        return apiRequest(route)
+        return fetchReleaseAsset(patchesConfig, usePrerelease) { it.name.endsWith(".mpp") }
     }
 
     /**

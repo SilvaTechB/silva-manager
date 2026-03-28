@@ -1,6 +1,6 @@
 /*
- * Copyright 2026 Morphe.
- * https://github.com/MorpheApp/silva-manager
+ * Copyright 2026 SilvaTechB.
+ * https://github.com/SilvaTechB/silva-manager
  */
 
 package app.silva.manager.ui.viewmodel

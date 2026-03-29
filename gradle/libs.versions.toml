@@ -20,8 +20,8 @@ serialization = "1.8.0"
 collection = "0.3.8"
 datetime = "0.6.1"
 room-version = "2.7.1"
-morphe-patcher = "1.3.2"
-morphe-library = "1.3.0"
+silva-patcher = "1.3.3"
+silva-library = "1.3.0"
 koin = "3.5.3"
 ktor = "2.3.9"
 markdown-renderer = "0.30.0"
@@ -89,8 +89,9 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 
 # Patcher
 arsclib = { module = "com.github.MorpheApp:ARSCLib", version.ref = "arsclib" }
-morphe-patcher = { group = "app.morphe", name = "morphe-patcher", version.ref = "morphe-patcher" }
-morphe-library = { group = "app.morphe", name = "morphe-library", version.ref = "morphe-library" }
+silva-patcher = { group = "app.silva", name = "silva-patcher", version.ref = "silva-patcher" }
+silva-library-android = { group = "app.silva", name = "silva-library-android", version.ref = "silva-library" }
+silva-library-jvm = { group = "app.silva", name = "silva-library-jvm", version.ref = "silva-library" }
 
 # Koin
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }

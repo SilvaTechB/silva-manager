@@ -1,14 +1,14 @@
 package app.silva.manager.patcher.patch
 
 import androidx.compose.runtime.Immutable
-import app.morphe.patcher.patch.Patch
-import app.morphe.patcher.patch.ApkFileType
+import app.silva.patcher.patch.Patch
+import app.silva.patcher.patch.ApkFileType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlin.reflect.KType
-import app.morphe.patcher.patch.Option as PatchOption
+import app.silva.patcher.patch.Option as PatchOption
 
 data class PatchInfo(
     val name: String,

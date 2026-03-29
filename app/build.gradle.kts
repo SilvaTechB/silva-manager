@@ -58,10 +58,12 @@ dependencies {
     annotationProcessor(libs.room.compiler)
     ksp(libs.room.compiler)
 
-    // Morphe
+    // Silva
     implementation(libs.arsclib)
-    implementation(libs.morphe.patcher)
-    implementation(libs.morphe.library)
+    implementation(libs.silva.patcher) {
+        exclude(group = "app.silva", module = "silva-library-jvm")
+    }
+    implementation(files("libs/silva-library-android-1.3.0.aar"))
 
     // Exclude xmlpull as it's included in Android already
     configurations.configureEach {

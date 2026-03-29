@@ -2,8 +2,8 @@ package app.silva.manager.domain.manager
 
 import android.app.Application
 import android.content.Context
-import app.morphe.patcher.apk.ApkSigner
-import app.morphe.patcher.apk.ApkUtils
+import app.silva.patcher.apk.ApkSigner
+import app.silva.patcher.apk.ApkUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.*

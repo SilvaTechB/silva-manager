@@ -36,6 +36,15 @@ dependencyResolutionManagement {
             }
         }
         maven {
+            url = uri("https://maven.pkg.github.com/SilvaTechB/silva-patcher")
+            credentials {
+                val gprUser: String? = providers.gradleProperty("gpr.user").orNull
+                val gprKey: String? = providers.gradleProperty("gpr.key").orNull
+                username = System.getenv("GITHUB_ACTOR") ?: gprUser
+                password = System.getenv("GITHUB_TOKEN") ?: gprKey
+            }
+        }
+        maven {
             url = uri("https://maven.pkg.github.com/MorpheApp/registry")
             credentials {
                 val gprUser: String? = providers.gradleProperty("gpr.user").orNull
@@ -50,10 +59,10 @@ dependencyResolutionManagement {
 rootProject.name = "silva-manager"
 include(":app")
 
-// Include morphe-patcher and morphe-library as composite builds if they exist locally
+// Include silva-patcher and silva-library as composite builds if they exist locally
 mapOf(
-    "morphe-patcher" to "app.morphe:morphe-patcher",
-    "morphe-library" to "app.morphe:morphe-library",
+    "silva-patcher" to "app.silva:silva-patcher",
+    "silva-library" to "app.silva:silva-library",
     "ARSCLib" to "com.github.REAndroid:arsclib"
 ).forEach { (libraryPath, libraryName) ->
     val libDir = file("../$libraryPath")

@@ -610,50 +610,38 @@ private fun BundleUpdateSnackbarContent(
 }
 
 /**
- * Section 2: Greeting message — Silva Tech Nexus branded.
+ * Section 2: Greeting / header — Silva branded.
  */
 @Composable
 fun GreetingSection(
     message: String
 ) {
     val primary = MaterialTheme.colorScheme.primary
-    val infiniteTransition = rememberInfiniteTransition(label = "nexus_pill_glow")
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.55f,
-        targetValue  = 1.00f,
-        animationSpec = infiniteRepeatable(
-            animation  = tween(1400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glow_alpha"
-    )
+    val onSurface = MaterialTheme.colorScheme.onBackground
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 12.dp)
     ) {
-        // Brand pill
-        val pillShape = RoundedCornerShape(50)
+        // Logo mark — rounded square with "S"
         Box(
             modifier = Modifier
-                .clip(pillShape)
+                .size(64.dp)
                 .drawWithContent {
-                    val cr = CornerRadius(size.height / 2)
-                    // neon glow fill
+                    val cr = CornerRadius(18.dp.toPx())
                     drawRoundRect(
-                        color = primary.copy(alpha = 0.14f),
+                        color = primary.copy(alpha = 0.12f),
                         cornerRadius = cr
                     )
                     drawContent()
-                    // animated neon border
                     drawRoundRect(
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                primary.copy(alpha = glowAlpha),
-                                primary.copy(alpha = glowAlpha * 0.45f),
-                                primary.copy(alpha = glowAlpha)
+                                primary.copy(alpha = 0.70f),
+                                primary.copy(alpha = 0.25f),
+                                primary.copy(alpha = 0.60f)
                             ),
                             start = Offset(0f, 0f),
                             end   = Offset(size.width, size.height)
@@ -661,50 +649,51 @@ fun GreetingSection(
                         cornerRadius = cr,
                         style = Stroke(width = 1.5.dp.toPx())
                     )
-                }
+                },
+            contentAlignment = Alignment.Center
         ) {
             Text(
-                text = stringResource(R.string.app_landing_title),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                color = primary,
-                letterSpacing = 3.sp,
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
+                text = "S",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Black,
+                color = primary
             )
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Animated greeting heading
-        Box(contentAlignment = Alignment.Center) {
-            AnimatedContent(
-                targetState = message,
-                transitionSpec = {
-                    (fadeIn(animationSpec = tween(400)) +
-                            slideInVertically(animationSpec = tween(400)) { it / 4 })
-                        .togetherWith(
-                            fadeOut(animationSpec = tween(200)) +
-                                    slideOutVertically(animationSpec = tween(200)) { -it / 4 }
-                        )
-                },
-                label = "greeting_transition"
-            ) { targetMessage ->
-                Text(
-                    text = targetMessage,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        shadow = androidx.compose.ui.graphics.Shadow(
-                            color = primary.copy(alpha = 0.45f),
-                            offset = Offset(0f, 3f),
-                            blurRadius = 18f
-                        )
-                    ),
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+        // App name
+        Text(
+            text = stringResource(R.string.app_name),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = onSurface,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Animated greeting/subtitle
+        AnimatedContent(
+            targetState = message,
+            transitionSpec = {
+                (fadeIn(animationSpec = tween(350)) +
+                        slideInVertically(animationSpec = tween(350)) { it / 5 })
+                    .togetherWith(
+                        fadeOut(animationSpec = tween(180)) +
+                                slideOutVertically(animationSpec = tween(180)) { -it / 5 }
+                    )
+            },
+            label = "greeting_transition"
+        ) { targetMessage ->
+            Text(
+                text = targetMessage,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center,
+                color = onSurface.copy(alpha = 0.55f),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -1496,15 +1485,9 @@ fun OtherAppsSection(
 }
 
 /**
- * Shared content layout for app cards and buttons.
+ * Shared content layout for app cards.
  *
- * Uses a multi-layer frosted glass effect:
- * - radial gradient base tinted from card colors
- * - top-left specular shine
- * - bottom-right warm glow from card accent color
- * - diagonal sweep highlight
- * - subtle horizontal frost band
- * - gradient border
+ * Clean dark card with a left-side accent strip and soft gradient tint.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -1517,19 +1500,14 @@ private fun AppCardLayout(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(20.dp)
     val view = LocalView.current
 
     val contentAlpha = if (enabled) 1f else 0.45f
-    val baseColor = gradientColors.firstOrNull() ?: Color.White
-    val midColor = gradientColors.getOrElse(1) { baseColor }
-    val endColor = gradientColors.lastOrNull() ?: baseColor
+    val accentColor = gradientColors.firstOrNull() ?: Color.White
+    val endColor    = gradientColors.lastOrNull() ?: accentColor
+    val borderAlpha = if (enabled) 1f else 0.3f
 
-    // Disabled state fades everything
-    val glassAlpha  = if (enabled) 1f else 0.5f
-    val borderAlpha = if (enabled) 1f else 0.4f
-
-    // Press scale animation
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -1544,124 +1522,51 @@ private fun AppCardLayout(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(84.dp)
+            .height(80.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(shape)
             .drawWithContent {
                 val w  = size.width
                 val h  = size.height
-                val cr = CornerRadius(24.dp.toPx())
+                val cr = CornerRadius(20.dp.toPx())
 
-                // Layer 1: radial base - color blooms from bottom-left
+                // Base: dark surface with very subtle color tint sweeping right
                 drawRoundRect(
-                    brush = Brush.radialGradient(
+                    brush = Brush.horizontalGradient(
                         colors = listOf(
-                            baseColor.copy(alpha = 0.88f * glassAlpha),
-                            midColor.copy(alpha = 0.65f * glassAlpha),
-                            endColor.copy(alpha = 0.45f * glassAlpha)
-                        ),
-                        center = Offset(w * 0.15f, h * 0.85f),
-                        radius = w * 1.1f
-                    ),
-                    cornerRadius = cr
-                )
-
-                // Layer 2: secondary radial bloom from top-right (accent)
-                drawRoundRect(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            endColor.copy(alpha = 0.62f * glassAlpha),
-                            midColor.copy(alpha = 0.30f * glassAlpha),
-                            Color.Transparent
-                        ),
-                        center = Offset(w * 0.88f, h * 0.12f),
-                        radius = w * 0.75f
-                    ),
-                    cornerRadius = cr
-                )
-
-                // Layer 3: frosted white overlay - adds glass depth
-                drawRoundRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.07f * glassAlpha),
-                            Color.White.copy(alpha = 0.02f * glassAlpha),
-                            Color.White.copy(alpha = 0.04f * glassAlpha)
-                        ),
-                        startY = 0f,
-                        endY = h
-                    ),
-                    cornerRadius = cr
-                )
-
-                // Layer 4: diagonal sweep highlight (top-left → mid) - specular glint
-                drawRoundRect(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.14f * glassAlpha),
-                            Color.White.copy(alpha = 0.04f * glassAlpha),
-                            Color.Transparent
-                        ),
-                        start = Offset(0f, 0f),
-                        end   = Offset(w * 0.55f, h)
-                    ),
-                    cornerRadius = cr
-                )
-
-                // Layer 5: bottom edge warm reflection
-                drawRoundRect(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            endColor.copy(alpha = 0.28f * glassAlpha)
-                        ),
-                        center = Offset(w * 0.5f, h),
-                        radius = w * 0.65f
-                    ),
-                    cornerRadius = cr
-                )
-
-                // Layer 6: subtle dark vignette at corners for depth
-                drawRoundRect(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.10f * glassAlpha)
-                        ),
-                        center = Offset(w * 0.5f, h * 0.5f),
-                        radius = w * 0.9f
+                            accentColor.copy(alpha = 0.18f),
+                            endColor.copy(alpha = 0.06f),
+                            Color.Black.copy(alpha = 0.10f)
+                        )
                     ),
                     cornerRadius = cr
                 )
 
                 drawContent()
 
-                // Border: neon cyan top-left → card accent → muted bottom-right
+                // Left accent bar
+                drawRoundRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            accentColor.copy(alpha = 0.90f * borderAlpha),
+                            endColor.copy(alpha = 0.55f * borderAlpha)
+                        )
+                    ),
+                    topLeft = Offset(0f, 0f),
+                    size = androidx.compose.ui.geometry.Size(4.dp.toPx(), h),
+                    cornerRadius = CornerRadius(2.dp.toPx())
+                )
+
+                // Card border
                 drawRoundRect(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF00D9FF).copy(alpha = 0.80f * borderAlpha),
-                            Color.White.copy(alpha = 0.35f * borderAlpha),
-                            midColor.copy(alpha = 0.30f * borderAlpha),
-                            Color(0xFF00D9FF).copy(alpha = 0.45f * borderAlpha)
+                            accentColor.copy(alpha = 0.40f * borderAlpha),
+                            endColor.copy(alpha = 0.15f * borderAlpha),
+                            accentColor.copy(alpha = 0.30f * borderAlpha)
                         ),
                         start = Offset(0f, 0f),
                         end   = Offset(w, h)
-                    ),
-                    cornerRadius = cr,
-                    style = Stroke(width = 1.5.dp.toPx())
-                )
-
-                // Neon top-edge shine (thin horizontal glow line at top)
-                drawRoundRect(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color(0xFF00D9FF).copy(alpha = 0.30f * borderAlpha),
-                            Color.Transparent
-                        ),
-                        start = Offset(w * 0.2f, 0f),
-                        end   = Offset(w * 0.8f, 0f)
                     ),
                     cornerRadius = cr,
                     style = Stroke(width = 1.dp.toPx())

@@ -55,7 +55,7 @@ sealed class PatchBundleInfo {
             // Accumulate all per-package metadata in a single pass
             var isVersionExperimental = false
             var appIconColor: Int? = null
-            var apkFileType: app.silva.patcher.patch.ApkFileType? = null
+            var apkFileType: app.morphe.patcher.patch.ApkFileType? = null
             var displayName: String? = null
             val signaturesAcc = mutableSetOf<String>()
 
@@ -121,7 +121,7 @@ sealed class PatchBundleInfo {
         val universal: List<PatchInfo>,
         val isVersionExperimental: Boolean = false,
         val appIconColor: Int? = null,
-        val apkFileType: app.silva.patcher.patch.ApkFileType? = null,
+        val apkFileType: app.morphe.patcher.patch.ApkFileType? = null,
         val displayName: String? = null,
         val signatures: Set<String>? = null,
     ) : PatchBundleInfo() {

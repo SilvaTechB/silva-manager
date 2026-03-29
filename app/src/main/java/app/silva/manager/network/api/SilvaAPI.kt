@@ -381,14 +381,43 @@ class SilvaAPI(
     // ============================================================================
 
     /**
-     * Get patches update from silva-patches GitHub releases (fallback when JSON is unavailable)
+     * Get patches update directly from the Morphe API (api.morphe.software).
+     * This is the primary source for patch bundle metadata.
      */
-    private suspend fun getPatchesFromApi(usePrerelease: Boolean): APIResponse<SilvaAsset> {
+    private suspend fun getPatchesFromMorpheApi(usePrerelease: Boolean): APIResponse<SilvaAsset> {
+        val channel = if (usePrerelease) "dev" else "latest"
+        val endpoint = "$MORPHE_API_URL/patches/$channel"
+        Log.d(tag, "Fetching patches from Morphe API: $endpoint")
+
+        return when (val response = client.request<PatchesReleaseInfo> { url(endpoint) }) {
+            is APIResponse.Success -> {
+                val mapped = runCatching {
+                    mapPatchesJsonToAsset(patchesConfig, response.data).also { asset ->
+                        Log.d(tag, "Patches from Morphe API ($channel): version=${asset.version}, url=${asset.downloadUrl}")
+                    }
+                }
+                mapped.fold(
+                    onSuccess = { APIResponse.Success(it) },
+                    onFailure = { error ->
+                        Log.w(tag, "Failed to parse Morphe API response", error)
+                        APIResponse.Failure(APIFailure(error, null))
+                    }
+                )
+            }
+            is APIResponse.Error -> APIResponse.Error(response.error)
+            is APIResponse.Failure -> APIResponse.Failure(response.error)
+        }
+    }
+
+    /**
+     * Get patches update from silva-patches GitHub releases (last-resort fallback).
+     */
+    private suspend fun getPatchesFromGitHubReleases(usePrerelease: Boolean): APIResponse<SilvaAsset> {
         return fetchReleaseAsset(patchesConfig, usePrerelease) { it.name.endsWith(".mpp") }
     }
 
     /**
-     * Get patches update from static JSON file
+     * Get patches update from static JSON file in the patches repository.
      */
     private suspend fun getPatchesFromJson(usePrerelease: Boolean): APIResponse<SilvaAsset> {
         val branch = if (usePrerelease) "dev" else "main"
@@ -415,17 +444,17 @@ class SilvaAPI(
     }
 
     /**
-     * Get patches update - uses JSON or API based on configuration.
+     * Get patches update.
+     * Priority: Morphe API → GitHub patches-bundle.json → GitHub releases.
      * Pass [usePrerelease] explicitly so each bundle can control its own channel independently.
      */
     suspend fun getPatchesUpdate(usePrerelease: Boolean): APIResponse<SilvaAsset> {
-        return if (USE_PATCHES_DIRECT_JSON) {
+        return getPatchesFromMorpheApi(usePrerelease).fallbackTo {
+            Log.w(tag, "Morphe API unavailable, trying GitHub patches-bundle.json")
             getPatchesFromJson(usePrerelease).fallbackTo {
-                Log.w(tag, "Falling back to Silva API for patches")
-                getPatchesFromApi(usePrerelease)
+                Log.w(tag, "GitHub patches-bundle.json unavailable, falling back to GitHub releases")
+                getPatchesFromGitHubReleases(usePrerelease)
             }
-        } else {
-            getPatchesFromApi(usePrerelease)
         }
     }
 

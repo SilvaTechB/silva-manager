@@ -49,7 +49,7 @@ import app.silva.manager.util.KnownApps
 import app.silva.manager.util.RemoteAvatar
 import app.silva.manager.util.htmlAnnotatedString
 import app.silva.manager.util.toast
-import app.silva.patcher.patch.AppTarget
+import app.morphe.patcher.patch.AppTarget
 import kotlinx.coroutines.*
 import java.net.URI
 

@@ -51,7 +51,7 @@ import app.silva.manager.util.PatchSelectionUtils.togglePatch
 import app.silva.manager.util.PatchSelectionUtils.updateOption
 import app.silva.manager.util.PatchSelectionUtils.validatePatchOptions
 import app.silva.manager.util.PatchSelectionUtils.validatePatchSelection
-import app.silva.patcher.patch.AppTarget
+import app.morphe.patcher.patch.AppTarget
 import io.ktor.http.encodeURLPath
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*

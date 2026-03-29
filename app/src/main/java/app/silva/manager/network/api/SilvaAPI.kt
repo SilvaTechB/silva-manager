@@ -445,13 +445,16 @@ class SilvaAPI(
 
     /**
      * Get patches update.
-     * Priority: GitHub releases (silva-patches) → patches-bundle.json fallback.
-     * Uses SilvaTechB/silva-patches GitHub releases as the primary source.
+     * Priority: Morphe API → GitHub patches-bundle.json → GitHub releases.
+     * Pass [usePrerelease] explicitly so each bundle can control its own channel independently.
      */
     suspend fun getPatchesUpdate(usePrerelease: Boolean): APIResponse<SilvaAsset> {
-        return getPatchesFromGitHubReleases(usePrerelease).fallbackTo {
-            Log.w(tag, "GitHub releases unavailable, trying static patches-bundle.json")
-            getPatchesFromJson(usePrerelease)
+        return getPatchesFromMorpheApi(usePrerelease).fallbackTo {
+            Log.w(tag, "Morphe API unavailable, trying GitHub patches-bundle.json")
+            getPatchesFromJson(usePrerelease).fallbackTo {
+                Log.w(tag, "GitHub patches-bundle.json unavailable, falling back to GitHub releases")
+                getPatchesFromGitHubReleases(usePrerelease)
+            }
         }
     }
 

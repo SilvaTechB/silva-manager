@@ -2,11 +2,11 @@ package app.silva.manager.patcher
 
 import android.content.Context
 import app.silva.manager.R
-import app.silva.patcher.Patcher
-import app.silva.patcher.PatcherConfig
-import app.silva.patcher.apk.ApkUtils.applyTo
-import app.silva.patcher.patch.Patch
-import app.silva.patcher.patch.PatchResult
+import app.morphe.patcher.Patcher
+import app.morphe.patcher.PatcherConfig
+import app.morphe.patcher.apk.ApkUtils.applyTo
+import app.morphe.patcher.patch.Patch
+import app.morphe.patcher.patch.PatchResult
 import app.silva.manager.patcher.Session.Companion.component1
 import app.silva.manager.patcher.Session.Companion.component2
 import app.silva.manager.patcher.logger.Logger

@@ -10,9 +10,9 @@ import androidx.compose.ui.graphics.Color
 
 const val tag = "Silva Manager"
 
-const val SOURCE_NAME = "Silva Patches"
+const val SOURCE_NAME = "Morphe Patches"
 const val MANAGER_REPO_URL = "https://github.com/SilvaTechB/silva-manager"
-const val SOURCE_REPO_URL = "https://github.com/SilvaTechB/silva-patches"
+const val SOURCE_REPO_URL = "https://github.com/MorpheApp/morphe-patches"
 const val MORPHE_API_URL = "https://api.morphe.software"
 
 /**
